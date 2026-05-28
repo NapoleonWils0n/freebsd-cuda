@@ -1,0 +1,7 @@
+*.env
+containers/custom
+containers/browsers/firefox/bin
+containers/browsers/firefox/dotfiles
+containers/python/whisperx/dotfiles
+containers/scripts/ffmpeg/bin
+containers/scripts/ffmpeg/dotfiles

@@ -1,0 +1,1069 @@
+#+STARTUP: show2levels
+* Freebsd Cuda
+** Project overview
+
+Run Linux command line and gui applications on FreeBSD with full Nvidia Cuda hardware acceleration.
+
+Mounts the Linuxulator libraries from Freebsd into the Podman containers,
+so you dont need to install the Nvidia driver into the container
+
+Wayland/X11 and PulseAudio Pass-through
+
+Displays graphics and routes audio via native FreeBSD sockets mounted inside the Podman container
+
+Hardware acclerated video
+
+Persistent storage for files so settings are retained when stopping containers
+
+Directory mounted from Freebsd into the Podman container for file access
+
+GUI Applications launched with desktop entries on Freebsd
+
+*** Pre-configured Applications
+
+Firefox with hardware accelerated video and Widevine DRM support
+
+ffmpeg with hardware-accelerated nvenc encoding 
+
+WhisperX audio transcription with Cuda acceleration
+
+Ollama using Cuda
+
+** Inital set up
+*** Follow the podman install instructions
+
+Follow the podman install instruction to get podman working
+
+Once you have the hello world container working you can proceed with the installation
+
+*** Clone the git repository
+
+The podman set up instructions will set up a zfs dataset which is mounted at ~/podman 
+
+Change into the podman directory
+
+#+begin_src sh
+cd ~/podman
+#+end_src
+
+Clone the git repository
+
+#+begin_src sh
+git clone https://github.com/NapoleonWils0n/freebsd-cuda.git
+#+end_src
+
+*** Required packages for audio
+
+You need pipewire, pulseaudio and pavucontrol installed
+
+#+begin_src sh
+doas pkg install pipewire pulseaudio pavucontrol
+#+end_src
+
+*** Pulseaudio config
+**** Option one use the Makefile
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/base-build/pulseaudio
+#+end_src
+
+run the Makefile to create the directory and file
+
+#+begin_src sh
+make
+#+end_src
+
+**** Option two manually create the directory and file
+
+Create the pulseaudio directory
+
+#+begin_src sh
+mkdir -p ~/.config/pulse
+#+end_src
+
+Create the default.pa file
+
+#+begin_src sh
+vi ~/.config/pulse/default.pa
+#+end_src
+
+Add the following code
+
+#+begin_src conf
+#!/usr/local/bin/pulseaudio -nF
+
+# include default.pa and override
+.include /usr/local/etc/pulse/default.pa
+
+# pulseaudio.socket
+.ifexists module-esound-protocol-unix.so
+load-module module-esound-protocol-unix
+.endif
+load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket
+#+end_src
+
+*** wrapper-freebsd
+
+The wrapper-freebsd script is used to launch gui application and works with the wrapper-podman script which is installed in the podman containers and a desktop entry
+
+Copy the wrapper-freebsd script to your bin directory
+
+If you have a bin directory in your home 
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd ~/bin
+#+end_src
+
+If you dont have a bin directory in your home you can copy the script to
+
+#+begin_example
+/usr/local/bin
+#+end_example
+
+#+begin_src sh
+doas cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd /usr/local/bin
+#+end_src
+
+** Build the images
+*** base-image
+**** Change into the base-image directory
+***** Wayland
+
+If you are using Wayland change into the wayland directory
+
+And then follow the Build the base-image instructions
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/base-build/base-image/wayland
+#+end_src
+
+***** X11
+
+If you are using X11 change into the x11 directory
+
+And then follow the Build the base-image instructions
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/base-build/base-image/x11
+#+end_src
+
+**** Build the base-image
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_UID="$(id -u)" \
+--build-arg HOST_USER="${USER}" \
+-t localhost/base-image .
+#+end_src
+
+**** dummy-uvm.so
+
+Note you dont need to build the dummy-uvm its included in the project
+
+These are just project notes on building the dummy-uvm
+
+Change into the uvm_ioctl_override directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/base-build/uvm_ioctl_override
+#+end_src
+
+Build the dummy-uvm.so with the podman container
+
+#+begin_src sh
+doas podman run --network host --rm -it --os linux -v .:/build:z docker.io/library/rockylinux:9.3 /bin/bash -c "dnf install -y gcc && gcc -m64 -std=c99 -O2 -fPIC -shared -o /build/dummy-uvm.so /build/uvm_ioctl_override.c -ldl"
+#+end_src
+
+Change the permissions on the dummy-uvm.so file
+
+#+begin_src sh
+doas chown root:wheel dummy-uvm.so
+doas chmod 755 dummy-uvm.so
+#+end_src
+
+Remove the old dummy-uvm.so
+
+#+begin_src sh
+rm -i ~/podman/freebsd-cuda/base-build/dummy-uvm/dummy-uvm.so
+#+end_src
+
+Move the new dummy-uvm.so into the dummy-uvm directory
+
+#+begin_src sh
+mv dummy-uvm.so ../dummy-uvm/
+#+end_src
+
+*** ai
+**** ollama
+***** Create the Ollama directory
+
+Create a zfs dataset for Ollama
+
+change djwilcox to your username in the code below
+
+#+begin_src sh
+doas zfs create zroot/home/djwilcox/.ollama
+#+end_src
+
+Then change the permissions
+
+#+begin_src sh
+doas chown -R djwilcox:djwilcox /home/djwilcox/.ollama
+#+end_src
+
+If you dont use zfs you can just create a directory
+
+#+begin_src sh
+mkdir -p ~/.ollama
+#+end_src
+
+***** Change directory into the ollama directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/ai/ollama
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile
+
+And the .env file which will set your username, id and set the mounted Downloads directory
+
+Make sure to review the .env file to make sure everything is correct
+
+#+begin_src sh
+make
+#+end_src
+
+***** Build the ollama container
+
+Note change the OLLAMA_VERSION="v0.24.0" to the latest version
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+--build-arg OLLAMA_VERSION="v0.24.0" \
+-t localhost/ollama .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** Enter the container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} ollama /bin/bash
+#+end_src
+
+***** ollama serve
+
+Run Ollama
+
+#+begin_src sh
+ollama serve
+#+end_src
+
+For older Turing Nvidia Gpu's like my GeForce GTX 1650 
+
+You need to use the following code to use cuda_v12
+
+#+begin_src sh
+OLLAMA_LLM_LIBRARY=cuda_v12 ollama serve
+#+end_src
+
+***** Exit the container
+
+When you have finished you can exit the container 
+
+#+begin_src sh
+exit
+#+end_src
+
+And then stop the container
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
+*** Scripts
+**** ffmpeg scripts
+***** Change directory into the ffmpeg directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/scripts/ffmpeg
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories
+
+And the .env file which will set your username, id and set the mounted Downloads directory
+
+Make sure to review the .env file to make sure everything is correct
+
+#+begin_src sh
+make
+#+end_src
+
+***** pulseaudio
+
+If you want to use ffplay 
+
+Open pulseaudio volume control on the Freebsd host to start pulseaudio
+
+Keep pulseaudio volume control open
+
+This will create the pulseaudio.socket and keep the socket open
+
+***** Build the ffmpeg container
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/ffmpeg-scripts .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** View the logs
+
+You need to view logs and wait for install to finish
+
+#+begin_src sh
+doas podman-compose logs -f
+#+end_src
+
+ctrl c to exit
+
+***** Enter the container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} ffmpeg-scripts /bin/bash
+#+end_src
+
+Change into the ~/video directory in the container
+
+#+begin_src sh
+cd ~/video
+#+end_src
+
+Copy a file to process from the freebsd host into the mountpoint
+
+Then in the container you will have access to the same file
+
+note:
+
+To view the yt-dlp help run pipe it into less
+
+#+begin_src sh
+yt-dlp -h | less
+#+end_src
+
+Otherwise it causes issue and the container will exit
+
+***** Exit the container
+
+When you have finished you can exit the container 
+
+#+begin_src sh
+exit
+#+end_src
+
+And then stop the container
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
+*** Browsers
+**** Firefox
+***** Change directory into the firefox directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/browsers/firefox
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories
+
+And the .env file which will set your username, id and set the mounted Videos directory
+
+Make sure to review the .env file to make sure everything is correct
+
+#+begin_src sh
+make
+#+end_src
+
+***** Build the firefox container
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/firefox .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** Enter container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} firefox /bin/bash
+#+end_src
+
+***** Widevine set up
+
+Open the setting from the hamburger menu
+
+Or use the following url
+
+#+begin_example
+about:settings
+#+end_example
+
+In the general settings section
+
+Check the box to playback drm in the firefox settings
+
+Next open about:profiles in the url bar
+
+#+begin_example
+about:profiles
+#+end_example
+
+make a note of your profile
+
+close firefox
+
+copy the user.js file into the profile directory
+
+***** exit the container
+
+When you have finished you can exit the container 
+
+#+begin_src sh
+exit
+#+end_src
+
+And then stop the container
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
+***** freebsd-podman.desktop
+
+Copy the freebsd-podman.desktop file into 
+
+#+begin_example
+~/.local/share/applications
+#+end_example
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/firefox-podman.desktop ~/.local/share/applications
+#+end_src
+
+*** Python
+**** whisperx
+***** Change directory into the whisperx directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/python/whisperx
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories
+
+And the .env file which will set your username, id and set the mounted Videos directory
+
+Make sure to review the .env file to make sure everything is correct
+
+#+begin_src sh
+make
+#+end_src
+
+***** Add your huggingface token to the file
+
+Sign up for huggingface and create a access token
+
+[[https://huggingface.co]]
+
+You then need to go the the speaker diarization url
+
+Fill out the quick agreement form and click Accept / Request Access.
+
+[[https://huggingface.co/pyannote/speaker-diarization-community-1]]
+
+#+begin_src sh
+vi dotfiles/cache/huggingface/token
+#+end_src
+
+***** Build the container
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/whisperx .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** View the logs
+
+You need to view logs and wait for install to finish
+
+#+begin_src sh
+doas podman-compose logs -f
+#+end_src
+
+***** Enter container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} whisperx /bin/bash
+#+end_src
+
+***** Run the python check for cuda
+
+#+begin_src python
+python3 -c "import torch; print('CUDA Available:', torch.cuda.is_available()); print('Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+#+end_src
+
+the output should look similar to this and list your Nvidia card
+
+#+begin_example
+CUDA Available: True
+Device: NVIDIA GeForce GTX 1650
+#+end_example
+
+***** Small model download
+
+Download the small model
+
+In this example using a audio file called input.wav
+
+#+begin_src sh
+whisperx input.wav \
+--device cuda \
+--model small \
+--diarize \
+--highlight_words True \
+--language en \
+--compute_type float32
+#+end_src
+
+***** Medium model download
+
+Download the medium model
+
+In this example using a audio file called input.wav
+
+#+begin_src sh
+whisperx input.wav \
+--device cuda \
+--model medium \
+--compute_type int8 \
+--batch_size 4 \
+--threads 1 \
+--diarize \
+--highlight_words True \
+--language en
+#+end_src
+
+***** Exit the container
+
+When you have finished you can exit the container 
+
+#+begin_src sh
+exit
+#+end_src
+
+And then stop the container
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
+*** Custom containers
+
+You can create a custom directory for your own containers
+
+Which wont be tracked by git,
+because i have set that directory to be ignored using gitignore
+
+#+begin_src sh
+mkdir -p ~/podman/freebsd-cuda/containers/custom
+#+end_src
+
+Then create the project in the custom directory
+
+#+begin_src sh
+mkdir -p ~/podman/freebsd-cuda/containers/custom/myproject
+#+end_src
+
+And copy the Dockerfile, compose.yaml, .env and the Makefile from one of the other projects
+
+*** Prune old images
+
+#+begin_src sh
+doas podman image prune -f
+#+end_src
+
+*** Upgrading containers
+
+To upgrade containers remove the old containers and then rebuild them 
+
+**** Delete the ollama container
+
+#+begin_src sh
+doas podman rmi localhost/ollama:latest
+#+end_src
+
+**** Delete the firefox container
+
+#+begin_src sh
+doas podman rmi localhost/firefox:latest
+#+end_src
+
+**** Delete the ffmpeg-scripts container
+
+#+begin_src sh
+doas podman rmi localhost/ffmpeg-scripts:latest
+#+end_src
+
+**** Delete the whisperx container
+
+#+begin_src sh
+doas podman rmi localhost/whisperx:latest
+#+end_src
+
+**** Delete the base-image container
+
+#+begin_src sh
+doas podman rmi localhost/base-image:latest
+#+end_src
+
+** Podman install
+
+There's also a podman-suite meta package that will pull additional packages for you (buildah, skopeo).
+
+To install podman-compose you need to install the py311-podman-compose package as well
+
+#+begin_src sh
+doas pkg install podman-suite py311-podman-compose
+#+end_src
+
+*** fstab
+
+To properly support Podman's container restart policy, conmon needs fdescfs(5) to be mounted on /dev/fd.
+
+If /dev/fd is not already mounted:
+
+#+begin_src sh
+doas mount -t fdescfs fdesc /dev/fd
+#+end_src
+
+To make it permanent, add the following line to /etc/fstab:
+
+#+begin_src sh
+doas vi /etc/fstab
+#+end_src
+
+#+begin_src conf
+fdesc   /dev/fd         fdescfs         rw      0       0
+#+end_src
+
+#+begin_src sh
+doas mount -t procfs proc /proc
+#+end_src
+
+*** linux
+
+Enable Linux compatibility at boot
+
+#+begin_src sh
+doas sysrc linux_enable="YES"
+#+end_src
+
+Start the service and load the 64-bit Linux kernel module
+
+#+begin_src sh
+doas service linux start
+#+end_src
+
+Load linux 
+
+#+begin_src sh
+doas kldload linux64
+#+end_src
+
+Ensure it loads every boot
+
+#+begin_src sh
+doas sysrc kld_list+="linux64"
+#+end_src
+
+*** pf
+
+#+begin_src sh
+service pf enable
+#+end_src
+
+#+begin_src sh
+service pf start
+#+end_src
+
+#+begin_src sh
+doas echo 'pf_load="YES"' >> /boot/loader.conf
+#+end_src
+
+#+begin_src sh
+kldload pf
+#+end_src
+
+Container networking relies on NAT to allow container network packets out to the host's network. This requires a PF firewall to perform the translation. A simple example is included - to use it:
+
+#+begin_src sh
+cp /usr/local/etc/containers/pf.conf.sample .
+#+end_src
+
+pf.conf.sample
+
+#+begin_src conf
+# Change these to the interface(s) with the default route
+v4egress_if = "ix0"
+v6egress_if = "ix0"
+
+nat on $v4egress_if inet from <cni-nat> to any -> ($v4egress_if)
+nat on $v6egress_if inet6 from <cni-nat> to !ff00::/8 -> ($v6egress_if)
+
+rdr-anchor "cni-rdr/*"
+nat-anchor "cni-rdr/*"
+table <cni-nat>
+#+end_src
+
+Edit /etc/pf.conf and set v4egress_if, v6egress_if variables to your network interface(s)s
+
+The sample PF configuration includes support for port redirections. These are implemented as redirect rules in anchors nested under cni-rdr.
+
+Redirect rules will work if the destination address is localhost (e.g. 127.0.0.1 or ::1) - to enable this, the following line must be included in your /etc/pf.conf:
+
+#+begin_src conf
+nat-anchor "cni-rdr/*"
+#+end_src
+
+#+begin_src sh
+doas vi /etc/pf.conf
+#+end_src
+
+#+begin_src conf
+#=========================================================================#
+# pf.conf
+#=========================================================================#
+
+#=========================================================================#
+# variables, macro and tables                                             #
+#=========================================================================#
+
+int_if="lagg0" # lagg0 failover
+v4egress_if = "lagg0" # podman
+v6egress_if = "lagg0" # podman
+vpn_if="tun0" # vpn interface
+all_networks="0.0.0.0/0"
+vpn_network="$vpn_if:network"
+# 6881, 6882 = transmission. , 22000, 22000, 21027 = syncthing
+# searxng podman = 8080
+tcp_services = "{ ntp, 6881, 22000, 8080 }" # tcp services - torrent
+udp_services = "{ ntp, 6882, 22000, 21027 }" # udp services - torrent
+#nfs_services = "{ 2049 }" # 2049 = nfs
+icmp_types = "{ echoreq, unreach }"
+tcp_state="flags S/SA keep state"
+udp_state="keep state"
+
+#table <internet> { $all_networks, !self, !$int_if:network } # internet
+table <lan> { $int_if:network, !self }                      # lan network
+table <myself> { self }                                     # self
+table <martians> { 0.0.0.0/8 10.0.0.0/8 127.0.0.0/8 169.254.0.0/16     \
+	 	   172.16.0.0/12 192.0.0.0/24 192.0.2.0/24 224.0.0.0/3 \
+	 	   192.168.0.0/16 198.18.0.0/15 198.51.100.0/24        \
+	 	   203.0.113.0/24 }                         # broken networks
+
+#=========================================================================#
+# global policy                                                           #
+#=========================================================================#
+
+set block-policy drop
+set loginterface $int_if
+set fingerprints "/etc/pf.os"
+set skip on { lo0, cni-podman0 }
+scrub in all fragment reassemble no-df max-mss 1440
+# nat jail
+nat on $int_if from {lo1:network} to any -> ($int_if)
+# podman nat
+nat on $v4egress_if inet from <cni-nat> to any -> ($v4egress_if)
+nat on $v6egress_if inet6 from <cni-nat> to !ff00::/8 -> ($v6egress_if)
+# podman anchor
+rdr-anchor "cni-rdr/*"
+nat-anchor "cni-rdr/*"
+table <cni-nat>
+# antispoof
+antispoof log quick for { lo $int_if } label "block_spoofing"
+
+
+#=========================================================================#
+# block                                                                   #
+#=========================================================================#
+
+block log all # block log all
+block return out quick inet6 all tag IPV6 # block ipv6 
+block in quick inet6 all tag IPV6 # block ipv6
+
+
+#=========================================================================#
+# anchors                                                                 #
+#=========================================================================#
+
+# openvpn - anchor
+anchor "openvpn"
+
+#=========================================================================#
+# traffic tag                                                             #
+#=========================================================================#
+
+# icmp
+pass inet proto icmp all icmp-type $icmp_types keep state tag ICMP
+
+# Allow the tcp and udp services defined in the macros at the top of the file
+pass in on $int_if inet proto tcp from any to ($int_if) port $tcp_services $tcp_state tag TCP_IN
+pass in on $int_if inet proto udp from any to ($int_if) port $udp_services $udp_state tag UDP_IN
+
+# outbound traffic
+block out on $int_if all
+pass out quick on $int_if all modulate state
+#+end_src
+
+restart pf
+
+#+begin_src sh
+doas service pf restart
+#+end_src
+
+*** zfs
+
+create a zfs dataset for podman
+
+#+begin_src sh
+doas zfs create -o mountpoint=/var/db/containers zroot/containers
+#+end_src
+
+*** sysctl
+
+apply net.pf.filter_local=1
+
+#+begin_src sh
+doas sysctl net.pf.filter_local=1
+#+end_src
+
+set net.pf.filter_local=1 permanently
+
+#+begin_src sh
+doas vi /etc/sysctl.conf
+#+end_src
+
+#+begin_src conf
+#=========================================================================#
+# podman
+#=========================================================================#
+
+net.pf.filter_local=1
+#+end_src
+
+*** podman enable
+
+Podman can restart containers after a host is rebooted. To enable this, use:
+
+#+begin_src sh
+doas sysrc podman_enable=YES
+#+end_src
+
+or you can manually edit your /etc/rc.conf
+
+#+begin_src sh
+doas vi /etc/rc.conf
+#+end_src
+
+#+begin_src conf
+#=========================================================================#
+# podman
+#=========================================================================#
+
+podman_enable=YES
+#+end_src
+
+*** registries.conf
+
+edit the registries.conf to define repos to podman
+
+#+begin_src sh
+doas vi /usr/local/etc/containers/registries.conf
+#+end_src
+
+append the following code
+
+#+begin_src conf
+unqualified-search-registries = ["docker.io", "quay.io", "ghcr.io"]
+
+[[registry]]
+location = "docker.io"
+
+[[registry]]
+location = "quay.io"
+
+[[registry]]
+location = "ghcr.io"
+#+end_src
+
+*** podman zfs dataset for config files
+
+Its good practice to create a zfs dataset for the podman directory
+
+note: change djwilcox to your username in the examples below
+
+we will also create a zfs dataset for our podman config files
+
+#+begin_src sh
+doas zfs create zroot/home/djwilcox/podman
+#+end_src
+
+change the permissions
+
+#+begin_src sh
+doas chown -R djwilcox:djwilcox /home/djwilcox/podman
+#+end_src
+
+if you dont wnat to create a zfs dataset
+
+you can just create a directory
+
+#+begin_src sh
+mkdir -p ~/podman
+#+end_src
+
+*** doas podman set up
+
+set up doas so you can can run podman without being prompted for a password
+
+#+begin_src sh
+doas vi 
+#+end_src
+
+change username to your username
+
+#+begin_src conf
+#=========================================================================#
+# doas.conf
+#=========================================================================#
+
+#=========================================================================#
+# permit user
+#=========================================================================#
+
+permit keepenv setenv { PATH } username
+
+
+#=========================================================================#
+# allow root to switch to our user
+#=========================================================================#
+
+permit nopass keepenv setenv { PATH } root as username
+
+
+#=========================================================================#
+# permit user - no pass
+#=========================================================================#
+
+permit nopass keepenv setenv { PATH } username
+
+
+#=========================================================================#
+# podman permit user - no pass
+#=========================================================================#
+
+permit nopass keepenv username cmd /usr/local/bin/podman
+
+
+#=========================================================================#
+# root as root
+#=========================================================================#
+
+permit nopass keepenv root as root
+#+end_src
+
+*** devfs.rules
+
+Edit your devfs.rules
+
+#+begin_src sh
+doas vi /etc/devfs.rules
+#+end_src
+
+Add the following code
+
+#+begin_src conf
+[localrules=5]
+add path 'da*' mode 0660 group operator
+add path 'dri/*' mode 0660 group video
+add path 'drm/*' mode 0660 group video
+add path 'input/*' mode 0660 group video
+add path 'input/event*' mode 0660 group video
+add path 'nvidia*' mode 0660 group video
+
+[devfsrules_jail=4]
+add include $devfsrules_unhide_basic
+add include $devfsrules_unhide_login
+add path 'mixer*' unhide
+add path 'dsp*' unhide
+add path 'dri*' unhide
+add path 'drm*' unhide
+add path 'nvidia*' unhide
+add path 'speaker*' unhide
+#+end_src
+
+*** podman test
+
+run the hello workd podmand container
+
+#+begin_src sh
+doas podman run --rm docker.io/dougrabson/hello
+#+end_src
+
