@@ -252,6 +252,16 @@ doas podman build \
 -t localhost/ollama .
 #+end_src
 
+***** View the logs
+
+You need to view logs and wait for install to finish
+
+#+begin_src sh
+doas podman-compose logs -f
+#+end_src
+
+ctrl c to exit logs
+
 ***** Start the container
 
 #+begin_src sh
@@ -403,7 +413,7 @@ cd ~/podman/freebsd-cuda/containers/browsers/firefox
 
 Run make Makefile which will create the persistent storage directories
 
-And the .env file which will set your username, id and set the mounted Videos directory
+And the .env file which will set your username, id and set the mounted Downloads directory
 
 Make sure to review the .env file to make sure everything is correct
 
@@ -459,6 +469,14 @@ make a note of your profile
 close firefox
 
 copy the user.js file into the profile directory
+
+Check your profile before copying the file
+
+Example command you must change s2vvkzgl.default-default to your profile
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/user.js ~/podman/freebsd-cuda/containers/browsers/firefox/dotfiles/mozilla/firefox/s2vvkzgl.default-default/
+#+end_src
 
 ***** exit the container
 
@@ -547,6 +565,8 @@ You need to view logs and wait for install to finish
 doas podman-compose logs -f
 #+end_src
 
+ctrl c to exit logs
+
 ***** Enter container
 
 #+begin_src sh
@@ -568,6 +588,8 @@ Device: NVIDIA GeForce GTX 1650
 
 ***** Small model download
 
+Change directory in to the ~/video directory in the container
+
 Download the small model
 
 In this example using a audio file called input.wav
@@ -583,6 +605,8 @@ whisperx input.wav \
 #+end_src
 
 ***** Medium model download
+
+Change directory in to the ~/video directory in the container
 
 Download the medium model
 
@@ -743,8 +767,10 @@ service pf enable
 service pf start
 #+end_src
 
+Note fix error
+
 #+begin_src sh
-doas echo 'pf_load="YES"' >> /boot/loader.conf
+doas sysrc 'pf_load=YES'
 #+end_src
 
 #+begin_src sh
@@ -971,7 +997,7 @@ change the permissions
 doas chown -R djwilcox:djwilcox /home/djwilcox/podman
 #+end_src
 
-if you dont wnat to create a zfs dataset
+if you dont want to create a zfs dataset
 
 you can just create a directory
 
@@ -1030,6 +1056,26 @@ permit nopass keepenv root as root
 #+end_src
 
 *** devfs.rules
+
+Add the localrules to your rc.conf with syscr
+
+#+begin_src sh
+doas sysrc devfs_system_ruleset="localrules"
+#+end_src
+
+Or you can manually edit your rc.conf
+
+#+begin_src sh
+doas vi /etc/rc.conf
+#+end_src
+
+add the following code
+
+#+begin_src conf
+devfs_system_ruleset="localrules"
+#+end_src
+
+Note: add devfs rules to config
 
 Edit your devfs.rules
 
