@@ -4,6 +4,8 @@
 
 Run Linux command line and gui applications on FreeBSD with full Nvidia Cuda hardware acceleration.
 
+🎥 [[https://www.youtube.com/watch?v=Txq8tXH9Wow][Cuda working on Freebsd using Podman containers]]
+
 Mounts the Linuxulator libraries from Freebsd into the Podman containers,
 so you dont need to install the Nvidia driver into the container
 
