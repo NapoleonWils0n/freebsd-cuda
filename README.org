@@ -29,7 +29,15 @@ ffmpeg with hardware-accelerated nvenc encoding
 
 WhisperX audio transcription with Cuda acceleration
 
+[[https://github.com/m-bain/whisperX]]
+
 Ollama using Cuda
+
+[[https://github.com/ollama/ollama]]
+
+kokoro-onnx using Cuda
+
+[[https://github.com/thewh1teagle/kokoro-onnx]]
 
 ** Inital set up
 *** Follow the podman install instructions
