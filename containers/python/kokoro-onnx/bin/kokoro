@@ -1,0 +1,154 @@
+#!/bin/sh
+""":"
+# Redirect standard error (2) to dev/null to block ONNX C++ logs completely
+exec "$(dirname "$0")/../kokoro/.venv/bin/python3" "$0" "$@" 2>/dev/null
+"""
+import os
+import sys
+import pwd
+import getopt
+
+#=======================================================================
+# 1. Suppress Environment Noise & Warnings
+#=======================================================================
+# Suppress ONNX Runtime internal logging severity (3 = ERROR / FATAL only)
+os.environ["ORT_LOGGING_LEVEL"] = "3"
+# Suppress low-level library/driver C++ standard error noise globally
+sys.stderr = open(os.devnull, "w")
+
+def get_username():
+    try:
+        return os.getlogin()
+    except OSError:
+        return pwd.getpwuid(os.getuid())[0]
+
+USER = get_username()
+
+#=======================================================================
+# 2. Clean Imports
+#=======================================================================
+import soundfile as sf
+import onnxruntime as ort
+from kokoro_onnx import Kokoro
+
+#=======================================================================
+# 3. Help Menu Definition
+#=======================================================================
+def display_help():
+    # Restore stderr temporarily to write the help menu text out
+    sys.stderr = sys.__stderr__
+    help_text = f"""
+Usage: kokoro -f <input_text_file> [OPTIONS]
+
+Options:
+  -f <file>    Path to the input text file to read from (Required)
+  -o <file>    Path to the output wav file destination
+               Default: input-filename.wav
+  -v <voice>   Specify the speaker voice variant
+               Default: bm_lewis
+  -h           Display this help usage screen
+
+Available Voices Reference:
+  https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+"""
+    print(help_text)
+    sys.exit(0)
+
+#=======================================================================
+# 4. Argument Handling Engine (getopt)
+#=======================================================================
+def parse_arguments():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hf:o:v:")
+    except getopt.GetoptError as err:
+        sys.stderr = sys.__stderr__
+        print(f"Error: {err}")
+        print(f"Run 'kokoro -h' for usage parameters.")
+        sys.exit(2)
+
+    input_file = None
+    output_file = None
+    voice = "bm_lewis"  # Default fallback voice assignment
+
+    for o, a in opts:
+        if o == "-h":
+            display_help()
+        elif o == "-f":
+            input_file = a
+        elif o == "-o":
+            output_file = a
+        elif o == "-v":
+            voice = a
+
+    # Enforce input file presence if help wasn't called
+    if not input_file:
+        sys.stderr = sys.__stderr__
+        print("Error: Input file (-f) is required.")
+        print("Run 'kokoro -h' for usage parameters.")
+        sys.exit(2)
+
+    # Process default filename based on the input file's name if -o is absent
+    if not output_file:
+        # Extract the base file name (e.g., "input.txt" -> "input")
+        base_name = os.path.splitext(os.path.basename(input_file))[0]
+        output_file = f"{base_name}.wav"
+
+    return input_file, output_file, voice
+
+#=======================================================================
+# 5. Execution Pipeline
+#=======================================================================
+def main():
+    input_path, output_path, selected_voice = parse_arguments()
+
+    # Read the text contents out of the source file
+    try:
+        with open(input_path, "r", encoding="utf-8") as f:
+            text_content = f.read().strip()
+    except Exception as e:
+        sys.stderr = sys.__stderr__
+        print(f"Error reading input file: {e}")
+        sys.exit(1)
+
+    if not text_content:
+        sys.stderr = sys.__stderr__
+        print("Error: Input text file is empty.")
+        sys.exit(1)
+
+    # Initialize backend session variables
+    MODEL_PATH = f"/home/{USER}/models/kokoro-v1.0.onnx"
+    VOICES_PATH = f"/home/{USER}/models/voices-v1.0.bin"
+
+    # Set logger to filter out internal system configuration warnings
+    session_options = ort.SessionOptions()
+    session_options.log_severity_level = 3
+
+    session = ort.InferenceSession(
+        MODEL_PATH,
+        sess_options=session_options,
+        providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
+    )
+
+    kokoro = Kokoro.from_session(session, VOICES_PATH)
+
+    # Compile string vector map array layers
+    samples, sample_rate = kokoro.create(
+        text_content,
+        voice=selected_voice,
+        speed=1.0,
+        lang="en-us"
+    )
+
+    # Save audio stream block straight to the disk target
+    try:
+        sf.write(output_path, samples, sample_rate)
+        # Restore standard output channel to report clear completion log
+        sys.stderr = sys.__stderr__
+        print(f"Successfully generated: {output_path}")
+    except Exception as e:
+        sys.stderr = sys.__stderr__
+        print(f"Error writing audio file: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

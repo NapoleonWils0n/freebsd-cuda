@@ -507,6 +507,121 @@ cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/firefox-podman.d
 #+end_src
 
 *** Python
+**** kokoro
+***** resources
+
+kokoro-onnx tts with Cuda support
+
+[[https://github.com/thewh1teagle/kokoro-onnx]]
+
+***** Change directory into the kokoro-onnx directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/python/kokoro-onnx
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories
+
+And the .env file which will set your username, id and set the mounted Videos directory
+
+Make sure to review the .env file to make sure everything is correct
+
+#+begin_src sh
+make
+#+end_src
+
+***** Build the container
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/kokoro-onnx .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** View the logs
+
+You need to view logs and wait for install to finish
+
+#+begin_src sh
+doas podman-compose logs -f
+#+end_src
+
+ctrl c to exit logs
+
+***** Enter container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} kokoro-onnx /bin/bash
+#+end_src
+
+***** kokoro script
+
+Run the kokoro script with the -h option to show the help
+
+#+begin_src sh
+kokoro -h
+#+end_src
+
+Help output
+
+#+begin_example
+Usage: kokoro -f <input_text_file> [OPTIONS]
+
+Options:
+  -f <file>    Path to the input text file to read from (Required)
+  -o <file>    Path to the output wav file destination
+               Default: input-filename.wav
+  -v <voice>   Specify the speaker voice variant
+               Default: bm_lewis
+  -h           Display this help usage screen
+
+Available Voices Reference:
+  https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+#+end_example
+
+Run the kokoro script
+
+#+begin_src sh
+kokoro -f input.txt 
+#+end_src
+
+Use the -f option with a text file to process
+
+Use the -v option to specify a voice
+
+[[https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md]]
+
+If you omit the -f option the default voice bm_lewis will be used
+
+Use the -o option to specify an output filename
+
+If you omit the -o option the default ouput filename will be the name of input file with a .wav extension
+
+***** Exit the container
+
+When you have finished you can exit the container 
+
+#+begin_src sh
+exit
+#+end_src
+
+And then stop the container
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
 **** whisperx
 ***** Change directory into the whisperx directory
 
