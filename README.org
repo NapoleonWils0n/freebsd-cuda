@@ -573,7 +573,14 @@ ctrl c to exit logs
 doas podman exec -it -u ${USER} kokoro-onnx /bin/bash
 #+end_src
 
-***** kokoro script
+***** kokoro scripts
+****** Mounted Directory
+
+The container will automatically mount your video directory from Freebsd
+
+Inside the container you can change directory into the mounted directory to process the text file and save the output
+
+****** kokoro
 
 Run the kokoro script with the -h option to show the help
 
@@ -615,6 +622,51 @@ If you omit the -f option the default voice bm_lewis will be used
 Use the -o option to specify an output filename
 
 If you omit the -o option the default ouput filename will be the name of input file with a .wav extension
+
+****** kokoro-stream
+
+The kokoro-stream script streams the audio from a text file instead of saving it as a wav
+
+Open Pulse Audio volume control on Freebsd before starting the container
+
+This will create the /tmp/pulseaudio.socket, and keep pulseaudio open
+
+Run the kokoro-stream script with the -h option to show the help
+
+#+begin_src sh
+kokoro-stream -h
+#+end_src
+
+Help output
+
+#+begin_example
+Usage: kokoro -f <input_text_file> [OPTIONS]
+
+Options:
+  -f <file>    Path to the input text file to read from (Required)
+  -v <voice>   Specify the speaker voice variant
+               Default: bm_lewis
+  -h           Display this help usage screen
+
+Available Voices Reference:
+  https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+#+end_example
+
+Run the kokoro script
+
+#+begin_src sh
+kokoro-stream -f input.txt 
+#+end_src
+
+Use the -f option with a text file to process
+
+Use the -v option to specify a voice
+
+[[https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md]]
+
+If you omit the -f option the default voice bm_lewis will be used
+
+The audio will be streamed using ffplay inside the container over the pulseaudio socket to Freebsd
 
 ***** Exit the container
 
