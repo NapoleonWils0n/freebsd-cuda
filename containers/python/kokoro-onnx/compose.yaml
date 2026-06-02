@@ -291,14 +291,20 @@ services:
         if [ -d "kokoro" ]; then
           cd kokoro
 
-          # uv init
-          uv init -p 3.12
+          # Check if the virtual environment has already been built
+          if [ ! -d ".venv" ]; then
+            echo "Initializing fresh Python environment..."
+            # uv init
+            uv init -p 3.12
+            
+            # uv pip install packages
+            uv venv
+            uv pip install kokoro-onnx soundfile "onnxruntime-gpu[cuda,cudnn]" fastapi uvicorn
+            echo "Minimal environment built successfully."
+          else
+            echo "Virtual environment already exists. Skipping initialization."
+          fi
           
-          # uv pip install packages
-          uv venv
-          uv pip install kokoro-onnx soundfile "onnxruntime-gpu[cuda,cudnn]"
-
-          echo "Minimal environment built successfully."
           cd ..
         else
           echo "ERROR: kokoro directory mount not found!"
