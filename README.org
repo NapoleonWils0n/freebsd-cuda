@@ -7,56 +7,56 @@ Run Linux command line and gui applications on FreeBSD with full Nvidia Cuda har
 🎥 [[https://www.youtube.com/watch?v=Txq8tXH9Wow][Cuda working on Freebsd using Podman containers]]
 
 Mounts the Linuxulator libraries from Freebsd into the Podman containers,
-so you dont need to install the Nvidia driver into the container
+so you dont need to install the Nvidia driver into the container.
 
-Wayland/X11 and PulseAudio Pass-through
+Wayland/X11 and PulseAudio Pass-through.
 
-Displays graphics and routes audio via native FreeBSD sockets mounted inside the Podman container
+Displays graphics and routes audio via native FreeBSD sockets mounted inside the Podman container.
 
-Hardware acclerated video
+Hardware acclerated video.
 
-Persistent storage for files so settings are retained when stopping containers
+Persistent storage for files so settings are retained when stopping containers.
 
-Directory mounted from Freebsd into the Podman container for file access
+Directory mounted from Freebsd into the Podman container for file access.
 
-GUI Applications launched with desktop entries on Freebsd
+GUI Applications launched with desktop entries on Freebsd.
 
 *** Pre-configured Applications
 
-Firefox with hardware accelerated video and Widevine DRM support
+Firefox with hardware accelerated video and Widevine DRM support.
 
-ffmpeg with hardware-accelerated nvenc encoding 
+ffmpeg with hardware-accelerated nvenc encoding.
 
-WhisperX audio transcription with Cuda acceleration
+WhisperX audio transcription with Cuda acceleration.
 
 [[https://github.com/m-bain/whisperX]]
 
-Ollama using Cuda
+Ollama using Cuda.
 
 [[https://github.com/ollama/ollama]]
 
-kokoro-onnx using Cuda
+kokoro-onnx using Cuda.
 
 [[https://github.com/thewh1teagle/kokoro-onnx]]
 
 ** Inital set up
 *** Follow the podman install instructions
 
-Follow the podman install instruction to get podman working
+Follow the podman install instruction to get podman working.
 
-Once you have the hello world container working you can proceed with the installation
+Once you have the hello world container working you can proceed with the installation.
 
 *** Clone the git repository
 
-The podman set up instructions will set up a zfs dataset which is mounted at ~/podman 
+The podman set up instructions will set up a zfs dataset which is mounted at ~/podman.
 
-Change into the podman directory
+Change into the podman directory.
 
 #+begin_src sh
 cd ~/podman
 #+end_src
 
-Clone the git repository
+Clone the git repository.
 
 #+begin_src sh
 git clone https://github.com/NapoleonWils0n/freebsd-cuda.git
@@ -64,7 +64,7 @@ git clone https://github.com/NapoleonWils0n/freebsd-cuda.git
 
 *** Required packages for audio
 
-You need pipewire, pulseaudio and pavucontrol installed
+You need pipewire, pulseaudio and pavucontrol installed.
 
 #+begin_src sh
 doas pkg install pipewire pulseaudio pavucontrol
@@ -77,7 +77,7 @@ doas pkg install pipewire pulseaudio pavucontrol
 cd ~/podman/freebsd-cuda/base-build/pulseaudio
 #+end_src
 
-run the Makefile to create the directory and file
+run the Makefile to create the directory and file.
 
 #+begin_src sh
 make
@@ -85,19 +85,19 @@ make
 
 **** Option two manually create the directory and file
 
-Create the pulseaudio directory
+Create the pulseaudio directory.
 
 #+begin_src sh
 mkdir -p ~/.config/pulse
 #+end_src
 
-Create the default.pa file
+Create the default.pa file.
 
 #+begin_src sh
 vi ~/.config/pulse/default.pa
 #+end_src
 
-Add the following code
+Add the following code.
 
 #+begin_src conf
 #!/usr/local/bin/pulseaudio -nF
@@ -114,17 +114,17 @@ load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket
 
 *** wrapper-freebsd
 
-The wrapper-freebsd script is used to launch gui application and works with the wrapper-podman script which is installed in the podman containers and a desktop entry
+The wrapper-freebsd script is used to launch gui application and works with the wrapper-podman script which is installed in the podman containers and a desktop entry.
 
-Copy the wrapper-freebsd script to your bin directory
+Copy the wrapper-freebsd script to your bin directory.
 
-If you have a bin directory in your home 
+If you have a bin directory in your home.
 
 #+begin_src sh
 cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd ~/bin
 #+end_src
 
-If you dont have a bin directory in your home you can copy the script to
+If you dont have a bin directory in your home you can copy the script to.
 
 #+begin_example
 /usr/local/bin
@@ -139,9 +139,9 @@ doas cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd /usr/loc
 **** Change into the base-image directory
 ***** Wayland
 
-If you are using Wayland change into the wayland directory
+If you are using Wayland change into the wayland directory.
 
-And then follow the Build the base-image instructions
+And then follow the Build the base-image instructions.
 
 #+begin_src sh
 cd ~/podman/freebsd-cuda/base-build/base-image/wayland
@@ -149,9 +149,9 @@ cd ~/podman/freebsd-cuda/base-build/base-image/wayland
 
 ***** X11
 
-If you are using X11 change into the x11 directory
+If you are using X11 change into the x11 directory.
 
-And then follow the Build the base-image instructions
+And then follow the Build the base-image instructions.
 
 #+begin_src sh
 cd ~/podman/freebsd-cuda/base-build/base-image/x11
@@ -171,36 +171,36 @@ doas podman build \
 
 **** dummy-uvm.so
 
-Note you dont need to build the dummy-uvm its included in the project
+Note you dont need to build the dummy-uvm its included in the project.
 
-These are just project notes on building the dummy-uvm
+These are just project notes on building the dummy-uvm.
 
-Change into the uvm_ioctl_override directory
+Change into the uvm_ioctl_override directory.
 
 #+begin_src sh
 cd ~/podman/freebsd-cuda/base-build/uvm_ioctl_override
 #+end_src
 
-Build the dummy-uvm.so with the podman container
+Build the dummy-uvm.so with the podman container.
 
 #+begin_src sh
 doas podman run --network host --rm -it --os linux -v .:/build:z docker.io/library/rockylinux:9.3 /bin/bash -c "dnf install -y gcc && gcc -m64 -std=c99 -O2 -fPIC -shared -o /build/dummy-uvm.so /build/uvm_ioctl_override.c -ldl"
 #+end_src
 
-Change the permissions on the dummy-uvm.so file
+Change the permissions on the dummy-uvm.so file.
 
 #+begin_src sh
 doas chown root:wheel dummy-uvm.so
 doas chmod 755 dummy-uvm.so
 #+end_src
 
-Remove the old dummy-uvm.so
+Remove the old dummy-uvm.so.
 
 #+begin_src sh
 rm -i ~/podman/freebsd-cuda/base-build/dummy-uvm/dummy-uvm.so
 #+end_src
 
-Move the new dummy-uvm.so into the dummy-uvm directory
+Move the new dummy-uvm.so into the dummy-uvm directory.
 
 #+begin_src sh
 mv dummy-uvm.so ../dummy-uvm/
@@ -210,21 +210,21 @@ mv dummy-uvm.so ../dummy-uvm/
 **** ollama
 ***** Create the Ollama directory
 
-Create a zfs dataset for Ollama
+Create a zfs dataset for Ollama,
 
-change djwilcox to your username in the code below
+change djwilcox to your username in the code below.
 
 #+begin_src sh
 doas zfs create zroot/home/djwilcox/.ollama
 #+end_src
 
-Then change the permissions
+Then change the permissions.
 
 #+begin_src sh
 doas chown -R djwilcox:djwilcox /home/djwilcox/.ollama
 #+end_src
 
-If you dont use zfs you can just create a directory
+If you dont use zfs you can just create a directory.
 
 #+begin_src sh
 mkdir -p ~/.ollama
@@ -238,11 +238,11 @@ cd ~/podman/freebsd-cuda/containers/ai/ollama
 
 ***** Run the Makefile
 
-Run make Makefile
+Run make Makefile.
 
-And the .env file which will set your username, id and set the mounted Downloads directory
+And the .env file which will set your username, id and set the mounted Downloads directory.
 
-Make sure to review the .env file to make sure everything is correct
+Make sure to review the .env file to make sure everything is correct.
 
 #+begin_src sh
 make
@@ -250,7 +250,7 @@ make
 
 ***** Build the ollama container
 
-Note change the OLLAMA_VERSION="v0.24.0" to the latest version
+Note change the OLLAMA_VERSION="v0.24.0" to the latest version.
 
 #+begin_src sh
 doas podman build \
@@ -264,13 +264,13 @@ doas podman build \
 
 ***** View the logs
 
-You need to view logs and wait for install to finish
+You need to view logs and wait for install to finish.
 
 #+begin_src sh
 doas podman-compose logs -f
 #+end_src
 
-ctrl c to exit logs
+ctrl c to exit logs.
 
 ***** Start the container
 
@@ -292,9 +292,9 @@ Run Ollama
 ollama serve
 #+end_src
 
-For older Turing Nvidia Gpu's like my GeForce GTX 1650 
+For older Turing Nvidia Gpu's like my GeForce GTX 1650,
 
-You need to use the following code to use cuda_v12
+You need to use the following code to use cuda_v12.
 
 #+begin_src sh
 OLLAMA_LLM_LIBRARY=cuda_v12 ollama serve
@@ -302,13 +302,13 @@ OLLAMA_LLM_LIBRARY=cuda_v12 ollama serve
 
 ***** Exit the container
 
-When you have finished you can exit the container 
+When you have finished you can exit the container.
 
 #+begin_src sh
 exit
 #+end_src
 
-And then stop the container
+And then stop the container.
 
 #+begin_src sh
 doas podman-compose down
@@ -324,11 +324,11 @@ cd ~/podman/freebsd-cuda/containers/scripts/ffmpeg
 
 ***** Run the Makefile
 
-Run make Makefile which will create the persistent storage directories
+Run make Makefile which will create the persistent storage directories.
 
-And the .env file which will set your username, id and set the mounted Downloads directory
+And the .env file which will set your username, id and set the mounted Downloads directory.
 
-Make sure to review the .env file to make sure everything is correct
+Make sure to review the .env file to make sure everything is correct.
 
 #+begin_src sh
 make
@@ -336,13 +336,13 @@ make
 
 ***** pulseaudio
 
-If you want to use ffplay 
+If you want to use ffplay,
 
-Open pulseaudio volume control on the Freebsd host to start pulseaudio
+Open pulseaudio volume control on the Freebsd host to start pulseaudio.
 
-Keep pulseaudio volume control open
+Keep pulseaudio volume control open.
 
-This will create the pulseaudio.socket and keep the socket open
+This will create the pulseaudio.socket and keep the socket open.
 
 ***** Build the ffmpeg container
 
@@ -363,13 +363,13 @@ doas podman-compose up -d
 
 ***** View the logs
 
-You need to view logs and wait for install to finish
+You need to view logs and wait for install to finish.
 
 #+begin_src sh
 doas podman-compose logs -f
 #+end_src
 
-ctrl c to exit
+ctrl c to exit.
 
 ***** Enter the container
 
@@ -377,35 +377,35 @@ ctrl c to exit
 doas podman exec -it -u ${USER} ffmpeg-scripts /bin/bash
 #+end_src
 
-Change into the ~/video directory in the container
+Change into the ~/video directory in the container.
 
 #+begin_src sh
 cd ~/video
 #+end_src
 
-Copy a file to process from the freebsd host into the mountpoint
+Copy a file to process from the freebsd host into the mountpoint.
 
-Then in the container you will have access to the same file
+Then in the container you will have access to the same file.
 
 note:
 
-To view the yt-dlp help run pipe it into less
+To view the yt-dlp help run pipe it into less.
 
 #+begin_src sh
 yt-dlp -h | less
 #+end_src
 
-Otherwise it causes issue and the container will exit
+Otherwise it causes issue and the container will exit.
 
 ***** Exit the container
 
-When you have finished you can exit the container 
+When you have finished you can exit the container.
 
 #+begin_src sh
 exit
 #+end_src
 
-And then stop the container
+And then stop the container.
 
 #+begin_src sh
 doas podman-compose down
@@ -421,11 +421,11 @@ cd ~/podman/freebsd-cuda/containers/browsers/firefox
 
 ***** Run the Makefile
 
-Run make Makefile which will create the persistent storage directories
+Run make Makefile which will create the persistent storage directories.
 
-And the .env file which will set your username, id and set the mounted Downloads directory
+And the .env file which will set your username, id and set the mounted Downloads directory.
 
-Make sure to review the .env file to make sure everything is correct
+Make sure to review the .env file to make sure everything is correct.
 
 #+begin_src sh
 make
@@ -456,33 +456,33 @@ doas podman exec -it -u ${USER} firefox /bin/bash
 
 ***** Widevine set up
 
-Open the setting from the hamburger menu
+Open the setting from the hamburger menu,
 
-Or use the following url
+Or use the following url.
 
 #+begin_example
 about:settings
 #+end_example
 
-In the general settings section
+In the general settings section,
 
-Check the box to playback drm in the firefox settings
+Check the box to playback drm in the firefox settings.
 
-Next open about:profiles in the url bar
+Next open about:profiles in the url bar.
 
 #+begin_example
 about:profiles
 #+end_example
 
-make a note of your profile
+make a note of your profile.
 
-close firefox
+close firefox.
 
-copy the user.js file into the profile directory
+copy the user.js file into the profile directory.
 
-Check your profile before copying the file
+Check your profile before copying the file.
 
-Example command you must change s2vvkzgl.default-default to your profile
+Example command you must change s2vvkzgl.default-default to your profile.
 
 #+begin_src sh
 cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/user.js ~/podman/freebsd-cuda/containers/browsers/firefox/dotfiles/mozilla/firefox/s2vvkzgl.default-default/
@@ -490,13 +490,13 @@ cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/user.js ~/podman
 
 ***** exit the container
 
-When you have finished you can exit the container 
+When you have finished you can exit the container.
 
 #+begin_src sh
 exit
 #+end_src
 
-And then stop the container
+And then stop the container.
 
 #+begin_src sh
 doas podman-compose down
@@ -504,7 +504,7 @@ doas podman-compose down
 
 ***** freebsd-podman.desktop
 
-Copy the freebsd-podman.desktop file into 
+Copy the freebsd-podman.desktop file into
 
 #+begin_example
 ~/.local/share/applications
@@ -518,7 +518,7 @@ cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/firefox-podman.d
 **** kokoro
 ***** resources
 
-kokoro-onnx tts with Cuda support
+kokoro-onnx tts with Cuda support.
 
 [[https://github.com/thewh1teagle/kokoro-onnx]]
 
@@ -530,11 +530,11 @@ cd ~/podman/freebsd-cuda/containers/python/kokoro-onnx
 
 ***** Run the Makefile
 
-Run make Makefile which will create the persistent storage directories
+Run make Makefile which will create the persistent storage directories.
 
-And the .env file which will set your username, id and set the mounted Videos directory
+And the .env file which will set your username, id and set the mounted Videos directory.
 
-Make sure to review the .env file to make sure everything is correct
+Make sure to review the .env file to make sure everything is correct.
 
 #+begin_src sh
 make
@@ -559,13 +559,13 @@ doas podman-compose up -d
 
 ***** View the logs
 
-You need to view logs and wait for install to finish
+You need to view logs and wait for install to finish.
 
 #+begin_src sh
 doas podman-compose logs -f
 #+end_src
 
-ctrl c to exit logs
+ctrl c to exit logs.
 
 ***** Enter container
 
@@ -576,19 +576,19 @@ doas podman exec -it -u ${USER} kokoro-onnx /bin/bash
 ***** kokoro scripts
 ****** Mounted Directory
 
-The container will automatically mount your video directory from Freebsd
+The container will automatically mount your video directory from Freebsd.
 
-Inside the container you can change directory into the mounted directory to process the text file and save the output
+Inside the container you can change directory into the mounted directory to process the text file and save the output.
 
 ****** kokoro
 
-Run the kokoro script with the -h option to show the help
+Run the kokoro script with the -h option to show the help.
 
 #+begin_src sh
 kokoro -h
 #+end_src
 
-Help output
+Help output.
 
 #+begin_example
 Usage: kokoro -f <input_text_file> [OPTIONS]
@@ -605,33 +605,33 @@ Available Voices Reference:
   https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
 #+end_example
 
-Run the kokoro script
+Run the kokoro script.
 
 #+begin_src sh
 kokoro -f input.txt 
 #+end_src
 
-Use the -f option with a text file to process
+Use the -f option with a text file to process.
 
-Use the -v option to specify a voice
+Use the -v option to specify a voice.
 
 [[https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md]]
 
-If you omit the -f option the default voice bm_lewis will be used
+If you omit the -f option the default voice bm_lewis will be used.
 
-Use the -o option to specify an output filename
+Use the -o option to specify an output filename.
 
-If you omit the -o option the default ouput filename will be the name of input file with a .wav extension
+If you omit the -o option the default ouput filename will be the name of input file with a .wav extension.
 
 ***** Exit the container
 
-When you have finished you can exit the container 
+When you have finished you can exit the container.
 
 #+begin_src sh
 exit
 #+end_src
 
-And then stop the container
+And then stop the container.
 
 #+begin_src sh
 doas podman-compose down
@@ -646,11 +646,11 @@ cd ~/podman/freebsd-cuda/containers/python/whisperx
 
 ***** Run the Makefile
 
-Run make Makefile which will create the persistent storage directories
+Run make Makefile which will create the persistent storage directories.
 
-And the .env file which will set your username, id and set the mounted Videos directory
+And the .env file which will set your username, id and set the mounted Videos directory.
 
-Make sure to review the .env file to make sure everything is correct
+Make sure to review the .env file to make sure everything is correct.
 
 #+begin_src sh
 make
@@ -658,11 +658,11 @@ make
 
 ***** Add your huggingface token to the file
 
-Sign up for huggingface and create a access token
+Sign up for huggingface and create a access token.
 
 [[https://huggingface.co]]
 
-You then need to go the the speaker diarization url
+You then need to go the the speaker diarization url.
 
 Fill out the quick agreement form and click Accept / Request Access.
 
@@ -691,13 +691,13 @@ doas podman-compose up -d
 
 ***** View the logs
 
-You need to view logs and wait for install to finish
+You need to view logs and wait for install to finish.
 
 #+begin_src sh
 doas podman-compose logs -f
 #+end_src
 
-ctrl c to exit logs
+ctrl c to exit logs.
 
 ***** Enter container
 
@@ -711,7 +711,7 @@ doas podman exec -it -u ${USER} whisperx /bin/bash
 python3 -c "import torch; print('CUDA Available:', torch.cuda.is_available()); print('Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
 #+end_src
 
-the output should look similar to this and list your Nvidia card
+the output should look similar to this and list your Nvidia card.
 
 #+begin_example
 CUDA Available: True
@@ -720,11 +720,11 @@ Device: NVIDIA GeForce GTX 1650
 
 ***** Small model download
 
-Change directory in to the ~/video directory in the container
+Change directory in to the ~/video directory in the container.
 
-Download the small model
+Download the small model.
 
-In this example using a audio file called input.wav
+In this example using a audio file called input.wav.
 
 #+begin_src sh
 whisperx input.wav \
@@ -738,11 +738,11 @@ whisperx input.wav \
 
 ***** Medium model download
 
-Change directory in to the ~/video directory in the container
+Change directory in to the ~/video directory in the container.
 
-Download the medium model
+Download the medium model.
 
-In this example using a audio file called input.wav
+In this example using a audio file called input.wav.
 
 #+begin_src sh
 whisperx input.wav \
@@ -758,13 +758,13 @@ whisperx input.wav \
 
 ***** Exit the container
 
-When you have finished you can exit the container 
+When you have finished you can exit the container.
 
 #+begin_src sh
 exit
 #+end_src
 
-And then stop the container
+And then stop the container.
 
 #+begin_src sh
 doas podman-compose down
@@ -772,22 +772,22 @@ doas podman-compose down
 
 *** Custom containers
 
-You can create a custom directory for your own containers
+You can create a custom directory for your own containers.
 
 Which wont be tracked by git,
-because i have set that directory to be ignored using gitignore
+because i have set that directory to be ignored using gitignore.
 
 #+begin_src sh
 mkdir -p ~/podman/freebsd-cuda/containers/custom
 #+end_src
 
-Then create the project in the custom directory
+Then create the project in the custom directory.
 
 #+begin_src sh
 mkdir -p ~/podman/freebsd-cuda/containers/custom/myproject
 #+end_src
 
-And copy the Dockerfile, compose.yaml, .env and the Makefile from one of the other projects
+And copy the Dockerfile, compose.yaml, .env and the Makefile from one of the other projects.
 
 *** Prune old images
 
@@ -797,7 +797,7 @@ doas podman image prune -f
 
 *** Upgrading containers
 
-To upgrade containers remove the old containers and then rebuild them 
+To upgrade containers remove the old containers and then rebuild them.
 
 **** Delete the ollama container
 
