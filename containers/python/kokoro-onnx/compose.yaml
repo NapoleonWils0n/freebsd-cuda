@@ -288,22 +288,43 @@ services:
 
         export UV_LINK_MODE=copy
 
+        #if [ -d "kokoro" ]; then
+        #  cd kokoro
+
+        #  # Check if the virtual environment has already been built
+        #  if [ ! -d ".venv" ]; then
+        #    echo "Initializing fresh Python environment..."
+        #    # uv init
+        #    uv init -p 3.12
+        #    
+        #    # uv pip install packages
+        #    uv venv
+        #    uv pip install kokoro-onnx soundfile "onnxruntime-gpu[cuda,cudnn]" fastapi uvicorn
+        #    echo "Minimal environment built successfully."
+        #  else
+        #    echo "Virtual environment already exists. Skipping initialization."
+        #  fi
+        #  
+        #  cd ..
+        #else
+        #  echo "ERROR: kokoro directory mount not found!"
+        #fi
         if [ -d "kokoro" ]; then
           cd kokoro
 
-          # Check if the virtual environment has already been built
+          # 1. Create the environment structure if it is completely missing
           if [ ! -d ".venv" ]; then
             echo "Initializing fresh Python environment..."
-            # uv init
             uv init -p 3.12
-            
-            # uv pip install packages
             uv venv
-            uv pip install kokoro-onnx soundfile "onnxruntime-gpu[cuda,cudnn]" fastapi uvicorn
-            echo "Minimal environment built successfully."
           else
-            echo "Virtual environment already exists. Skipping initialization."
+            echo "Virtual environment directory found."
           fi
+          
+          # 2. Always run pip install to catch newly added packages safely
+          echo "Syncing package requirements..."
+          uv pip install kokoro-onnx soundfile "onnxruntime-gpu[cuda,cudnn]" fastapi uvicorn
+          echo "Environment sync complete."
           
           cd ..
         else

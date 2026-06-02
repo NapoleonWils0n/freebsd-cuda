@@ -1,0 +1,107 @@
+#!/bin/sh
+""":"
+# Redirect standard error (2) to dev/null to block ONNX C++ initialization logs
+exec "$(dirname "$0")/../kokoro/.venv/bin/python3" "$0" "$@" 2>/dev/null
+"""
+import os
+import sys
+import pwd
+import subprocess
+import asyncio
+import soundfile as sf
+
+#=======================================================================
+# 1. Suppress Environment Noise & Warnings
+#=======================================================================
+os.environ["ORT_LOGGING_LEVEL"] = "3"
+sys.stderr = open(os.devnull, "w")
+
+def get_username():
+    try:
+        return os.getlogin()
+    except OSError:
+        return pwd.getpwuid(os.getuid())[0]
+
+USER = get_username()
+
+#=======================================================================
+# 2. Clean Imports
+#=======================================================================
+import onnxruntime as ort
+from kokoro_onnx import Kokoro
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import uvicorn
+
+#=======================================================================
+# 3. Initialize Engine globally so it stays warm in GPU Memory
+#=======================================================================
+MODEL_PATH = f"/home/{USER}/models/kokoro-v1.0.onnx"
+VOICES_PATH = f"/home/{USER}/models/voices-v1.0.bin"
+
+session_options = ort.SessionOptions()
+session_options.log_severity_level = 3
+
+session = ort.InferenceSession(
+    MODEL_PATH,
+    sess_options=session_options,
+    providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
+)
+kokoro = Kokoro.from_session(session, VOICES_PATH)
+
+#=======================================================================
+# 4. FastAPI Setup
+#=======================================================================
+app = FastAPI(
+    title="Kokoro TTS Unified API",
+    description="GPU-accelerated Speech Server"
+)
+
+class StreamRequest(BaseModel):
+    text: str
+    voice: str = "bm_lewis"
+    speed: float = 1.0
+
+#=======================================================================
+# 5. Corrected Asynchronous Audio Stream Worker
+#=======================================================================
+async def play_audio_stream(text_content: str, voice: str, speed: float):
+    ffplay_cmd = [
+        "ffplay", "-nodisp", "-autoexit", 
+        "-f", "f32le", "-ar", "24000", "-ac", "1", "-"
+    ]
+    
+    player = subprocess.Popen(
+        ffplay_cmd, 
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    try:
+        # Create the stream loop as an async iterator
+        stream = kokoro.create_stream(text_content, voice=voice, speed=speed, lang="en-us")
+        
+        # FIX: Explicitly use "async for" to read from the generator chunk-by-chunk
+        async for samples, sample_rate in stream:
+            if player.poll() is not None:
+                break
+            player.stdin.write(samples.tobytes())
+            player.stdin.flush()
+    except Exception:
+        pass
+    finally:
+        if player.stdin:
+            player.stdin.close()
+        player.wait()
+
+@app.post("/v1/audio/speech")
+async def generate_speech(request: StreamRequest):
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text payload cannot be empty.")
+    
+    # Spawn the async stream worker into the running event loop in the background
+    asyncio.create_task(play_audio_stream(request.text, request.voice, request.speed))
+    return {"status": "playback_initiated", "voice": request.voice}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="error")
