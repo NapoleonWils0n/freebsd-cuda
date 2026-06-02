@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#===============================================================================
+# file: kokoro-start
+# project: kokoro-onnx
+#===============================================================================
+
+
+#===============================================================================
+# kokoro-api
+# Open Pulse Audio Volume Control on Freebsd before running this script.
+#===============================================================================
+
+wrapper-freebsd -j kokoro-onnx -a kokoro-api -c "${HOME}/podman/freebsd-cuda/containers/python/kokoro-onnx/compose.yaml" -e "${HOME}/podman/freebsd-cuda/containers/python/kokoro-onnx/.env"

@@ -121,7 +121,7 @@ Copy the wrapper-freebsd script to your bin directory.
 If you have a bin directory in your home.
 
 #+begin_src sh
-cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd ~/bin
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrappers/wrapper-freebsd ~/bin
 #+end_src
 
 If you dont have a bin directory in your home you can copy the script to.
@@ -131,7 +131,7 @@ If you dont have a bin directory in your home you can copy the script to.
 #+end_example
 
 #+begin_src sh
-doas cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrapper-freebsd /usr/local/bin
+doas cp ~/podman/freebsd-cuda/base-build/assets/scripts/wrappers/wrapper-freebsd /usr/local/bin
 #+end_src
 
 ** Build the images
@@ -574,13 +574,11 @@ doas podman exec -it -u ${USER} kokoro-onnx /bin/bash
 #+end_src
 
 ***** kokoro scripts
-****** Mounted Directory
+****** kokoro
 
 The container will automatically mount your video directory from Freebsd.
 
 Inside the container you can change directory into the mounted directory to process the text file and save the output.
-
-****** kokoro
 
 Run the kokoro script with the -h option to show the help.
 
@@ -625,11 +623,96 @@ If you omit the -o option the default ouput filename will be the name of input f
 
 ****** kokoro-api
 
-******* emacs
+The kokoro-api script allows you to read text from Freebsd,
+using either emacs or the kokoro-read script which accepts a file or from text on the clipboard.
+
+Copy the kokoro script to your home bin directory 
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/kokoro/* ~/bin
+#+end_src
+
+If you dont have a bin directory in your home copy them /usr/local/bin
+
+#+begin_src sh
+doas cp ~/podman/freebsd-cuda/base-build/assets/scripts/kokoro/* /usr/local/bin
+#+end_src
+
+******* kokoro-start
+
+The kokoro-start script starts the kokoro-onnx podman container and the kokoro-api script.
+
+You need to open pulseaudio volume control on the Freebsd host to start pulseaudio,
+before running the kokoro-start script.
+
+Keep pulseaudio volume control open.
+
+This will create the pulseaudio.socket and keep the socket open.
+
+Run the kokoro-start script.
+
+#+begin_src sh
+kokoro-start
+#+end_src
+
+******* kokoro-read
+
+Open pulse audio volume control and run the kokoro-start script.
+
+The kokoro-read script accepts a file or from text on the clipboard.
+
+Run the kokoro-read with the -h option to display the help.
+
+#+begin_src sh
+kokoro-read -h
+#+end_src
+
+Help output.
+
+#+begin_example
+kokoro-read -i input -c on -v voice
+-i : accepts a text file
+-c on : reads the contents of the clipboard
+-v voice : specify the voice to use
+#+end_example
+
+To read text from the clipboard run.
+
+#+begin_src sh
+kokoro-read -c on
+#+end_src
+
+Note the clipboard function use the wayland clipboard,
+if you use X11 edit the clipboard function and change the following code.
+
+#+begin_example
+"$(wl-paste | tr -d '\n')"
+#+end_example
+
+To
+
+#+begin_example
+"$(xclip -o | tr -d '\n')"
+#+end_example
+
+******* emacs kokoro-speak-region
+
+After opening pulseaudio volume control and running the kokoro-start script,
+and adding the following code to your emacs init.el.
+
+You can select a region of text and run the keyboard shortcut to read the text.
+
+#+begin_example
+C-c s
+#+end_example
+
+Edit your emacsd init.el
 
 #+begin_example
 ~/.config/emacs/init.el
 #+end_example
+
+Add the following code.
 
 #+begin_src emacs-lisp
 ;; ----------------------------------------------------------------------------------

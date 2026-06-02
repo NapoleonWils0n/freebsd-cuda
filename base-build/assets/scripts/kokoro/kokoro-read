@@ -1,0 +1,97 @@
+#!/bin/sh
+
+#===============================================================================
+# kokoro-read
+# project: kokoro-onnx
+# https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+#===============================================================================
+
+#===============================================================================
+# to use the clipboard option
+# kokoro-read -c on
+#===============================================================================
+
+#===============================================================================
+# script usage
+#===============================================================================
+
+usage () {
+# if argument passed to function echo it
+[ -z "${1}" ] || echo "! ${1}"
+echo "\
+$(basename "$0") -i input
+-i : accepts a text file
+-c on : reads the contents of the clipboard
+-v voice : specify the voice to use"
+exit 1
+}
+
+#===============================================================================
+# error messages
+#===============================================================================
+
+WRONG_ARGS_ERR='wrong number of arguments passed to script'
+INVALID_OPT_ERR='Invalid option:'
+REQ_ARG_ERR='requires an argument'
+
+
+#===============================================================================
+# check number of aruments passed to script
+#===============================================================================
+
+[ $# -gt 0 ] || usage "${WRONG_ARGS_ERR}"
+
+#===============================================================================
+# getopts check options passed to script
+#===============================================================================
+
+while getopts ':i:c:v:h' opt
+do
+  case ${opt} in
+     i) input="${OPTARG}";;
+     c) clipboard="${OPTARG}";;
+     v) voice="${OPTARG}";;
+     h) usage;;
+     \?) usage "${INVALID_OPT_ERR} ${OPTARG}" 1>&2;;
+     :) usage "${INVALID_OPT_ERR} ${OPTARG} ${REQ_ARG_ERR}" 1>&2;;
+  esac
+done
+shift $((OPTIND-1))
+
+#===============================================================================
+# functions
+#===============================================================================
+
+# Ensure voice has a fallback if -v was not provided
+voice_default='bm_lewis'
+
+# api: now accepts text and voice as arguments
+api() {
+    # Using printf for clean JSON construction without external tools
+    curl -s -X POST "http://127.0.0.1:8000/v1/audio/speech" \
+         -H "Content-Type: application/json" \
+         -d "$(printf '{"text": "%s", "voice": "%s"}' "$1" "${voice:-$voice_default}")"
+}
+
+# file: read file directly into the api call
+file(){
+    # Redirecting the file content directly into a variable
+    api "$(cat "$1")"
+}
+
+# clipboard: execute wl-paste directly within the api call
+clipboard(){
+    api "$(wl-paste | tr -d '\n')"
+}
+
+#===============================================================================
+# Execution Logic
+#===============================================================================
+
+if [ -n "${input}" ]; then
+    file "${input}"
+elif [ -n "${clipboard}" ]; then
+    clipboard
+else
+    usage "No valid option provided."
+fi
