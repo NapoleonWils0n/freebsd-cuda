@@ -239,7 +239,7 @@ services:
 
         {
           # append the linuxulator libraries to the LD_LIBRARY_PATH 
-          echo 'export LD_LIBRARY_PATH="$(echo /home/djwilcox/kokoro/.venv/lib/python3.12/site-packages/nvidia/*/lib | tr " " ":"):/usr/lib64/nvidia-host:/usr/lib64"'
+          echo "export LD_LIBRARY_PATH=\"$(echo /home/${HOST_UID}/kokoro/.venv/lib/python3.12/site-packages/nvidia/*/lib | tr ' ' ':'):/usr/lib64/nvidia-host:/usr/lib64\""
 
           # LD_PRELOAD the dummy-uvm.so for the gpu
           echo 'export LD_PRELOAD=/usr/lib64/dummy-uvm.so'
