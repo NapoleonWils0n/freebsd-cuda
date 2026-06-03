@@ -574,6 +574,14 @@ doas podman exec -it -u ${USER} kokoro-onnx /bin/bash
 #+end_src
 
 ***** kokoro scripts
+****** curl
+
+#+begin_src sh
+curl -X POST "http://127.0.0.1:8000/v1/audio/speech" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "Kokoro onnx text to speech using curl.", "voice": "bm_lewis"}'
+#+end_src
+
 ****** kokoro
 
 The container will automatically mount your video directory from Freebsd.
