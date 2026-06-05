@@ -4,5 +4,7 @@ containers/browsers/firefox/bin
 containers/browsers/firefox/dotfiles
 containers/python/whisperx/dotfiles
 containers/python/kokoro-onnx/dotfiles
+containers/python/comfyui/dotfiles
+containers/python/comfyui/ComfyUI
 containers/scripts/ffmpeg/bin
 containers/scripts/ffmpeg/dotfiles
