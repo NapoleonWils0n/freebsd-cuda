@@ -39,6 +39,10 @@ kokoro-onnx using Cuda.
 
 [[https://github.com/thewh1teagle/kokoro-onnx]]
 
+ComfYU
+
+[[https://github.com/comfy-org/comfyui]]
+
 ** Inital set up
 *** Follow the podman install instructions
 
@@ -1061,6 +1065,18 @@ doas podman rmi localhost/ffmpeg-scripts:latest
 
 #+begin_src sh
 doas podman rmi localhost/whisperx:latest
+#+end_src
+
+**** Delete the kokoro-onnx container
+
+#+begin_src sh
+doas podman rmi localhost/kokoro-onnx:latest
+#+end_src
+
+**** Delete the comfyui container
+
+#+begin_src sh
+doas podman rmi localhost/comfyui:latest
 #+end_src
 
 **** Delete the base-image container
