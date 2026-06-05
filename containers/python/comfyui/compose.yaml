@@ -314,7 +314,7 @@ volumes:
 
   #=========================================================================
   # Shared Memory Volume
-  # Provides 4GB of tmpfs space
+  # Provides 8GB of tmpfs space
   #=========================================================================
 
   rocky-shm:
