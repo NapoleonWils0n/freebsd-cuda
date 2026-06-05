@@ -1,0 +1,338 @@
+#===============================================================================
+# FILE: compose.yaml
+# Project: comfyui
+#===============================================================================
+
+#===============================================================================
+# Services Configuration
+#===============================================================================
+
+services:
+  gpu-app:
+    # Build using the local lightweight Dockerfile
+    build:
+      context: .
+
+      # use networking from the freebsd host
+      network: host
+
+      # HOST_USER set from .env is your user on Freebsd
+      args:
+        - HOST_USER=${HOST_USER}
+
+    # image name
+    image: localhost/comfyui:latest
+
+    # platform linux
+    platform: linux/amd64
+
+    # container name
+    container_name: comfyui
+
+    # HOST_USER set from .env is your user on Freebsd
+    user: "${HOST_USER}"
+
+    # os linux
+    os: linux
+
+    # use networking from the freebsd host
+    network_mode: host
+
+    # stdin and tty
+    stdin_open: true
+    tty: true
+
+    # SIGKILL so the container stops cleaning using: doas podman-compose down
+    stop_signal: SIGKILL
+
+
+#===============================================================================
+# Volume Mounts (Host Bindings & Jail Sockets)
+#===============================================================================
+
+    volumes:
+
+
+      #=========================================================================
+      # Host Library and Nvidia bindings
+      #=========================================================================
+
+      # linuxulator libraries
+      - /compat/linux/usr/lib64:/usr/lib64/nvidia-host:ro
+
+      # nvidia-smi
+      - /compat/linux/usr/bin/nvidia-smi:/usr/local/bin/nvidia-smi:ro
+
+      # dummy-uvm.so
+      - ../../../base-build/dummy-uvm/dummy-uvm.so:/usr/lib64/dummy-uvm.so:ro
+      
+
+      #=========================================================================
+      # Jail Sockets & Runtime Essentials
+      #=========================================================================
+
+      # linuxulator directories
+      - /compat/linux/proc:/proc
+      - /compat/linux/sys:/sys
+      - /compat/linux/dev/fd:/dev/fd
+
+      # tmpfs
+      - rocky-shm:/dev/shm
+
+
+      #=========================================================================
+      # /tmp directory for pulseaudio.socket
+      #=========================================================================
+
+      - /tmp:/tmp:ro
+
+
+      #=========================================================================
+      # XDG_RUNTIME_DIR for wayland socket
+      #=========================================================================
+
+      - ${HOST_XDG_RUNTIME_DIR}:/run/user/${HOST_UID}:ro
+
+
+      #=========================================================================
+      # rocky-writeable-run
+      #=========================================================================
+
+      # xdg runtime dir in the container
+      - rocky-writeable-run:/run/user/${HOST_UID}-writeable:rw
+
+
+      #=========================================================================
+      # AUTOMATED PERSISTENT APPLICATION CONFIG WORKSPACE
+      #=========================================================================
+
+      # cache
+      - ./dotfiles/cache:/home/${HOST_USER}/.cache:rw
+
+      # comfyui
+      - ./ComfyUI:/home/${HOST_USER}/ComfyUI:rw
+
+      #=========================================================================
+      # App mounts
+      #=========================================================================
+
+      # mount directory mounted from host in .env file
+      - ${HOST_MOUNT}:${HOST_MOUNT}:rw
+
+
+
+#===============================================================================
+# Entrypoint & Shell Initialization
+#===============================================================================
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: 
+      - |
+
+        #=======================================================================
+        # create the directory structure 
+        #=======================================================================
+
+        # tmp directory
+        mkdir -p /home/${HOST_USER}/tmp
+
+        # cache directory
+        mkdir -p /home/${HOST_USER}/.cache
+
+        # local share
+        mkdir -p /home/${HOST_USER}/.local/share
+
+
+        #=======================================================================
+        # CREATE WRITEABLE RUNTIME ENVIRONMENT (Bypasses read-only host mount)
+        #=======================================================================
+
+        # xdg runtime dir
+        mkdir -p /run/user/${HOST_UID}-writeable
+        chmod 700 /run/user/${HOST_UID}-writeable
+
+
+        #=======================================================================
+        # Symlink the display socket from the read-only path into the writeable one
+        #=======================================================================
+
+        # wayland socket
+        wayland () {
+        if [ -S /run/user/${HOST_UID}/wayland-0 ]; then
+          ln -sf /run/user/${HOST_UID}/wayland-0 /run/user/${HOST_UID}-writeable/wayland-0
+        fi
+        }
+
+
+        # X11 socket
+        x11 () {
+        if [ -S /tmp/.X11-unix/X0 ]; then
+          mkdir -p /home/${HOST_USER}/tmp/.X11-unix
+          ln -sf /tmp/.X11-unix/X0 /home/${HOST_USER}/tmp/.X11-unix/X0
+        fi
+        }
+
+
+        # HOST_XDG_SESSION_TYPE set in .env
+        case "${HOST_XDG_SESSION_TYPE}" in
+            wayland) wayland;;
+            x11) x11;;
+        esac
+
+
+        #=======================================================================
+        # FIXED: Explicitly handle Pulse Audio paths using correct absolute locations
+        #=======================================================================
+
+        if [ -d /run/user/${HOST_UID}/pulse ]; then
+          mkdir -p /run/user/${HOST_UID}-writeable/pulse
+          chmod 700 /run/user/${HOST_UID}-writeable/pulse
+          if [ -S /run/user/${HOST_UID}/pulse/native ]; then
+            ln -sf /run/user/${HOST_UID}/pulse/native /run/user/${HOST_UID}-writeable/pulse/native
+          fi
+        fi
+
+
+        #=======================================================================
+        # FIXED: Explicitly handle D-Bus paths using correct absolute locations
+        #=======================================================================
+
+        if [ -d /run/user/${HOST_UID}/dbus-1 ]; then
+          mkdir -p /run/user/${HOST_UID}-writeable/dbus-1
+          chmod 700 /run/user/${HOST_UID}-writeable/dbus-1
+          if [ -d /run/user/${HOST_UID}/dbus-1/services ]; then
+            ln -sf /run/user/${HOST_UID}/dbus-1/services /run/user/${HOST_UID}-writeable/dbus-1/services
+          fi
+        fi
+
+
+        #=======================================================================
+        # Symlink XDG session handle if present
+        #=======================================================================
+
+        if [ -e /run/user/${HOST_UID}/xdg_session.0 ]; then
+          ln -sf /run/user/${HOST_UID}/xdg_session.0 /run/user/${HOST_UID}-writeable/xdg_session.0
+        fi
+
+
+        #=======================================================================
+        # Fix ownership of Podman-created root configuration space
+        #=======================================================================
+
+        # chown the xdg runtime dir
+        chown -R ${HOST_USER}:${HOST_USER} /run/user/${HOST_UID}-writeable
+        chown -R ${HOST_USER}:${HOST_USER} /home/${HOST_USER}/tmp
+
+        # chmod the tmp directory
+        chmod 755 /home/${HOST_USER}/tmp
+
+
+        #=======================================================================
+        # Append environment parameters into .bashrc to survive runuser switch
+        #=======================================================================
+
+        {
+          # append the linuxulator libraries to the LD_LIBRARY_PATH 
+          echo 'export LD_LIBRARY_PATH=/usr/lib64:/usr/lib64/nvidia-host'
+
+          # LD_PRELOAD the dummy-uvm.so for the gpu
+          echo 'export LD_PRELOAD=/usr/lib64/dummy-uvm.so'
+          
+          # export the DBUS_SESSION_BUS_ADDRESS
+          echo 'export DBUS_SESSION_BUS_ADDRESS='"${HOST_DBUS_SESSION_BUS_ADDRESS}"''
+
+          # set the TMPDIR to ~/tmp
+          echo 'export TMPDIR=/home/'"${HOST_USER}"'/tmp'
+
+          # export the xdg directories
+          echo 'export XDG_RUNTIME_DIR=/run/user/'"${HOST_UID}"'-writeable'
+          echo 'export XDG_CONFIG_HOME=/home/'"${HOST_USER}"'/.config'
+          echo 'export XDG_CACHE_HOME=/home/'"${HOST_USER}"'/.cache'
+          echo 'export XDG_DATA_HOME=/home/'"${HOST_USER}"'/.local/share'
+
+          # add the python venv bin to the shell path
+          echo "export PATH=$PATH:/home/${HOST_USER}/ComfyUI/.venv/bin"
+
+          # language settings
+          echo 'export LC_ALL=en_US.UTF-8'
+          echo 'export LANG=en_US.UTF-8'
+
+          # python encoding
+          echo 'export PYTHONIOENCODING=utf-8'
+
+          # cuda settings
+          echo 'export CUDA_VISIBLE_DEVICES=0'
+          echo 'export CUDA_LAUNCH_BLOCKING=1'
+          echo 'export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=true'
+
+          # command line args
+          echo "export COMMANDLINE_ARGS=\"${HOST_COMMANDLINE_ARGS}\""
+
+          # activate the python venv 
+          echo "source /home/${HOST_USER}/ComfyUI/.venv/bin/activate"
+        } >> /home/${HOST_USER}/.bashrc
+
+
+        #=======================================================================
+        # python
+        #=======================================================================
+
+        # Check for the script file instead of the directory to handle empty mounted volumes
+        if [ ! -f "/home/${HOST_USER}/ComfyUI/.venv/bin/activate" ]; then
+          echo "Creating Python virtual environment..."
+          python3.12 -m venv "/home/${HOST_USER}/ComfyUI/.venv"
+          . "/home/${HOST_USER}/ComfyUI/.venv/bin/activate"
+          "/home/${HOST_USER}/ComfyUI/.venv/bin/pip" install --upgrade pip setuptools wheel
+          "/home/${HOST_USER}/ComfyUI/.venv/bin/pip" install torch torchaudio --index-url https://download.pytorch.org/whl/cu130
+          
+          # Move to ComfyUI directory and install main requirements
+          cd "/home/${HOST_USER}/ComfyUI"
+          "./.venv/bin/pip" install -r requirements.txt
+          
+          # Install ComfyUI-Manager requirements
+          if [ -f "custom_nodes/comfyui-manager/requirements.txt" ]; then
+            echo "Installing ComfyUI-Manager requirements..."
+            "./.venv/bin/pip" install -r custom_nodes/comfyui-manager/requirements.txt
+          fi
+        else
+          echo "Re-activating existing Python virtual environment..."
+          . "/home/${HOST_USER}/ComfyUI/.venv/bin/activate"
+        fi
+
+        #=======================================================================
+        # Switch from root to our user
+        #=======================================================================
+
+        exec /bin/bash
+
+
+#===============================================================================
+# Named Volumes Definition
+#===============================================================================
+
+volumes:
+
+  #=========================================================================
+  # Shared Memory Volume
+  # Provides 4GB of tmpfs space
+  #=========================================================================
+
+  rocky-shm:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=8g,mode=1777"
+
+
+  #=========================================================================
+  # Writeable Runtime Directory
+  # Isolated tmpfs layer to bypass the read-only FreeBSD host XDG mount
+  #=========================================================================
+
+  rocky-writeable-run:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=16m,mode=0700"
