@@ -515,6 +515,128 @@ cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/firefox-podman.d
 #+end_src
 
 *** Python
+**** comfyui
+***** Change directory into the comfyui directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/python/comfyui
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories.
+
+And the .env file which will set your username, id and set the mounted Videos directory.
+
+Make sure to review the .env file to make sure everything is correct.
+
+#+begin_src sh
+make
+#+end_src
+
+Note: You may need to change medvram to either lowvram or highvram depending on your set up.
+
+#+begin_example
+HOST_COMMANDLINE_ARGS="--xformers --disable-dynamic-vram --medvram"
+#+end_example
+
+***** comfy_aimdo fix
+
+You need to edit the comfy_aimdo/control.py file and comment out some code,
+and add a small block of code.
+
+#+begin_src sh
+vi ComfyUI/.venv/lib/python3.12/site-packages/comfy_aimdo/control.py
+#+end_src
+
+Comment out the code as shown below, and add the new code block at the top.
+
+#+begin_src python
+def init_devices(device_ids):
+    return False
+
+#def init_devices(device_ids):
+#    global devctxs
+#
+#    if lib is None:
+#        return False
+#
+#    requested = [int(device_id) for device_id in device_ids]
+#    if not requested:
+#        return False
+#
+#    if not lib.plat_init():
+#        return False
+#
+#    device_array = (ctypes.c_int * len(requested))(*requested)
+#    if lib.init(device_array, len(requested)):
+#        devctxs = [get_devctx(device_id) for device_id in requested]
+#        return True
+#
+#    devctxs = []
+#    lib.plat_cleanup()
+#    return False
+#+end_src
+
+***** build
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/comfyui .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** View the logs
+
+You need to view logs and wait for install to finish.
+
+#+begin_src sh
+doas podman-compose logs -f
+#+end_src
+
+ctrl c to exit logs.
+
+***** Enter container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} comfyui /bin/bash
+#+end_src
+
+***** webui
+
+Change into the ComfyUI directory.
+
+#+begin_src sh
+cd ComfyUI
+#+end_src
+
+Start the webui.
+
+#+begin_src sh
+python main.py
+#+end_src
+
+Open the webui.
+
+[[http://127.0.0.1:8188]]
+
+***** Downloading models
+
+Move download models to
+
+#+begin_example
+ComfyUI/models/checkpoints
+#+end_example
+
 **** kokoro
 ***** resources
 
