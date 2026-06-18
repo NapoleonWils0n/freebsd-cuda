@@ -254,7 +254,7 @@ make
 
 ***** Build the ollama container
 
-Note change the OLLAMA_VERSION="v0.30.7" to the latest version.
+Note change the OLLAMA_VERSION="v0.30.10" to the latest version.
 
 #+begin_src sh
 doas podman build \
@@ -262,7 +262,7 @@ doas podman build \
 --os linux \
 --arch amd64 \
 --build-arg HOST_USER="${USER}" \
---build-arg OLLAMA_VERSION="v0.30.7" \
+--build-arg OLLAMA_VERSION="v0.30.10" \
 -t localhost/ollama .
 #+end_src
 
