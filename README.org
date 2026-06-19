@@ -318,6 +318,44 @@ And then stop the container.
 doas podman-compose down
 #+end_src
 
+***** Makefile
+
+To make starting easier i created a Makefile you can use to start and stop Ollama.
+
+1) Copy the wrapper-freebsd script to your bin directory as explained earlier.
+
+2) Create a directory for the Makefile
+
+#+begin_src sh
+mkdir -p ~/make/ollama
+#+end_src
+
+3) Copy the Makefile into the directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/makefiles/ollama/Makefile ~/make/ollama
+#+end_src
+
+4) Using the Makefile
+
+Change into the directory with the Ollama Makefile.
+
+#+begin_src sh
+cd ~/make/ollama
+#+end_src
+
+Start Ollama
+
+#+begin_src sh
+make
+#+end_src
+
+Stop Ollama
+
+#+begin_src sh
+make clean
+#+end_src
+   
 *** Scripts
 **** ffmpeg scripts
 ***** Change directory into the ffmpeg directory

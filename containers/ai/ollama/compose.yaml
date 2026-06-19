@@ -109,6 +109,9 @@ services:
       # ollama directory mounted from host
       - /home/${HOST_USER}/.ollama:/home/${HOST_USER}/.ollama:rw
 
+      # bin directory mounted from host in .env file
+      - ./${HOST_BIN}:/home/${HOST_USER}/${HOST_BIN}:ro
+
 
 #===============================================================================
 # Entrypoint & Shell Initialization

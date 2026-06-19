@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#===============================================================================
+# start-ollama
+#===============================================================================
+
+# Query nvidia-smi for the GPU name
+GPU_NAME=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader)
+
+# Check if the gpu is (GTX 16xx, RTX 20xx, or explicit Turing)
+if echo "$GPU_NAME" | grep -qiE "turing|GTX 16|RTX 20"; then
+    OLLAMA_LLM_LIBRARY=cuda_v12 ollama serve
+else
+    ollama serve
+fi
