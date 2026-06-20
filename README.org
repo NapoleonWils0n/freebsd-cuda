@@ -919,6 +919,44 @@ And then stop the container.
 doas podman-compose down
 #+end_src
 
+***** Makefile
+
+To make starting easier i created a Makefile you can use to start and stop kokoro-onnx
+
+1) Copy the wrapper-freebsd script to your bin directory as explained earlier.
+
+2) Create a directory for the Makefile
+
+#+begin_src sh
+mkdir -p ~/make/kokoro
+#+end_src
+
+3) Copy the Makefile into the directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/makefiles/kokoro/Makefile ~/make/kokoro
+#+end_src
+
+4) Using the Makefile
+
+Change into the directory with the Ollama Makefile.
+
+#+begin_src sh
+cd ~/make/kokoro
+#+end_src
+
+Start kokoro
+
+#+begin_src sh
+make
+#+end_src
+
+Stop kokoro
+
+#+begin_src sh
+make clean
+#+end_src
+   
 **** whisperx
 ***** Change directory into the whisperx directory
 
