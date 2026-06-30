@@ -556,6 +556,20 @@ Copy the freebsd-podman.desktop file into
 cp ~/podman/freebsd-cuda/base-build/assets/applications/firefox/firefox-podman.desktop ~/.local/share/applications
 #+end_src
 
+***** Stop the container
+
+Change into the container directory.
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/browsers/firefox
+#+end_src
+
+And stop the container.
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
 *** Python
 **** comfyui
 ***** Change directory into the comfyui directory
@@ -678,6 +692,20 @@ Move download models to
 #+begin_example
 ComfyUI/models/checkpoints
 #+end_example
+
+***** Stop the container
+
+Change into the container directory.
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/python/comfyui
+#+end_src
+
+And stop the container.
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
 
 **** kokoro
 ***** resources
@@ -1208,6 +1236,20 @@ Copy the DV_Resolve.png from the squashfs-root directory to the default icons di
 
 #+begin_src sh
 doas cp ~/video/resolve/squashfs-root/graphics/DV_Resolve.png /usr/local/share/icons/hicolor/scalable/apps
+#+end_src
+
+***** Stop the container
+
+Change into the container directory.
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/video/davinci-resolve
+#+end_src
+
+And stop the container.
+
+#+begin_src sh
+doas podman-compose down
 #+end_src
 
 ***** ffmpeg script to convert prores to h265
