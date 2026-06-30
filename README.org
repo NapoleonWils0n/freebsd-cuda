@@ -1204,16 +1204,10 @@ cp -a bin libs share plugins LUT Fusion Developer graphics docs scripts UI_Resou
 
 ***** Desktop entry
 
-On Freebsd create a directory for the Davinci Resolve png for the desktop entry.
+Copy the DV_Resolve.png from the squashfs-root directory to the default icons directory for the desktop entry.
 
 #+begin_src sh
-mkdir -p ~/.local/share/icons
-#+end_src
-
-Copy the DV_Resolve.png file from the squashfs-root into the icons directory.
-
-#+begin_src sh
-cp ~/video/resolve/squashfs-root/graphics/DV_Resolve.png ~/.local/share/icons
+doas cp ~/video/resolve/squashfs-root/graphics/DV_Resolve.png /usr/local/share/icons/hicolor/scalable/apps
 #+end_src
 
 ***** ffmpeg script to convert prores to h265
