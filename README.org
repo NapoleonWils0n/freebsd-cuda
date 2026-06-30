@@ -1520,6 +1520,12 @@ doas podman image prune -f
 
 To upgrade containers remove the old containers and then rebuild them.
 
+**** Delete the davinci-resolve container
+
+#+begin_src sh
+doas podman rmi localhost/davinci-resolve:latest
+#+end_src
+
 **** Delete the ollama container
 
 #+begin_src sh
