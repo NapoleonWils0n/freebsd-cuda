@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=DaVinci Resolve
+GenericName=DaVinci Resolve
+Comment=Revolutionary new tools for editing, visual effects, color correction and professional audio post production, all in a single application!
+Exec=sh -c "wrapper-freebsd -j 'davinci-resolve' -a '/opt/resolve/bin/resolve' -c "${HOME}/podman/freebsd-cuda/containers/video/davinci-resolve/compose.yaml" -e "${HOME}/podman/freebsd-cuda/containers/video/davinci-resolve/.env" %u"
+Terminal=false
+MimeType=application/x-resolveproj;
+Icon=DV_Resolve
+StartupNotify=true
+Name[en_US]=DaVinci Resolve

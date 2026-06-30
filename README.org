@@ -1238,6 +1238,12 @@ Copy the DV_Resolve.png from the squashfs-root directory to the default icons di
 doas cp ~/video/resolve/squashfs-root/graphics/DV_Resolve.png /usr/local/share/icons/hicolor/scalable/apps
 #+end_src
 
+Copy the DaVinciResolve.desktop to the applications directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/applications/davinci-resolve/DaVinciResolve.desktop ~/.local/share/applications
+#+end_src
+
 ***** Stop the container
 
 Change into the container directory.
