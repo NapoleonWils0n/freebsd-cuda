@@ -1090,6 +1090,230 @@ And then stop the container.
 doas podman-compose down
 #+end_src
 
+*** Video
+**** Davinci Resolve
+***** Change directory into the davinci-resolve directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/video/davinci-resolve
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories.
+
+And the .env file which will set your username, id and set the mounted Videos directory.
+
+Make sure to review the .env file to make sure everything is correct.
+
+#+begin_src sh
+make
+#+end_src
+
+Note: You may need to change medvram to either lowvram or highvram depending on your set up.
+
+***** build
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/davinci-resolve .
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** Davinci Resolve download
+
+Download the latest version of Davinci Resolve.
+
+[[https://www.blackmagicdesign.com/uk/products/davinciresolve]]
+
+Create a resolve directory in the your video directory.
+
+#+begin_src sh
+mkdir -p ~/video/resolve
+#+end_src
+
+Note if you are using a newer version of Davinci Resolve,
+change the version number in the commands listed below.
+
+Move the zip file into the resolve directory.
+
+#+begin_src sh
+mv DaVinci_Resolve_21.0.1_Linux.zip ~/video/resolve
+#+end_src
+
+Change into the resolve directory.
+
+#+begin_src sh
+cd ~/video/resolve
+#+end_src
+
+Install zip on Freebsd
+
+#+begin_src sh
+doas pkg install zip
+#+end_src
+
+Unzip the file
+
+#+begin_src sh
+unzip DaVinci_Resolve_21.0.1_Linux.zip
+#+end_src
+
+***** Enter the container
+
+#+begin_src sh
+doas podman exec -it -u ${USER} davinci-resolve /bin/bash
+#+end_src
+
+***** Davinci Resolve install
+
+Inside the Podman container change into the resolve directory you created.
+
+#+begin_src sh
+cd video/resolve
+#+end_src
+
+Extract the DaVinci_Resolve_21.0.1_Linux.run file with --appimage-extract.
+
+#+begin_src sh
+./DaVinci_Resolve_21.0.1_Linux.run --appimage-extract
+#+end_src
+
+Change directory into the squashfs-root directory.
+
+#+begin_src sh
+cd squashfs-root
+#+end_src
+
+Copy the directories from the squashfs-root directory into /opt/resolve/
+
+#+begin_src sh
+cp -a bin libs share plugins LUT Fusion Developer graphics docs scripts UI_Resource Onboarding Certificates Control CentOSUpdate BlackmagicRAWPlayer BlackmagicRAWSpeedTest "DaVinci Control Panels Setup" "Fairlight Studio Utility" "Technical Documentation" /opt/resolve/
+#+end_src
+
+***** ffmpeg script to convert prores to h265
+
+Freebsd ffmpeg script to convert Prores video to h265.
+
+Copy the prores-h265 script to your bin directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/davinci-resolve/prores-h265 ~/bin
+#+end_src
+
+prores-h265 
+
+#+begin_src sh
+#!/bin/sh
+
+#===============================================================================
+# convert prores video to h265/aac
+#===============================================================================
+
+
+#===============================================================================
+# script usage
+#===============================================================================
+
+usage()
+{
+# if argument passed to function echo it
+[ -z "${1}" ] || echo "! ${1}"
+# display help
+echo "\
+# convert prores video to h265/aac
+
+$(basename "$0") -i input.mov -o output.mp4
+-i infile.mov
+-o outfile.mov :optional agument # if option not provided defaults to input-name.mp4"
+exit 2
+}
+
+
+#===============================================================================
+# error messages
+#===============================================================================
+
+NOTFILE_ERR='not a file'
+INVALID_OPT_ERR='Invalid option:'
+REQ_ARG_ERR='requires an argument'
+WRONG_ARGS_ERR='wrong number of arguments passed to script'
+
+
+#===============================================================================
+# check number of aruments passed to script
+#===============================================================================
+
+[ $# -gt 0 ] || usage "${WRONG_ARGS_ERR}"
+
+
+#===============================================================================
+# getopts check options passed to script
+#===============================================================================
+
+while getopts ':i:o:h' opt
+do
+  case ${opt} in
+     i) input="${OPTARG}"
+	[ -f "${input}" ] || usage "${input} ${NOTFILE_ERR}";;
+     o) output="${OPTARG}";;
+     h) usage;;
+     \?) usage "${INVALID_OPT_ERR} ${OPTARG}" 1>&2;;
+     :) usage "${INVALID_OPT_ERR} ${OPTARG} ${REQ_ARG_ERR}" 1>&2;;
+  esac
+done
+shift $((OPTIND-1))
+
+
+#===============================================================================
+# variables
+#===============================================================================
+
+input_nopath="${input##*/}"
+input_name="${input_nopath%.*}"
+
+# defaults for variables if not defined
+output_default="${input_name}.mp4"
+
+
+#===============================================================================
+# functions
+#===============================================================================
+
+# h265 function
+h265 () {
+    nv-sglrun \
+    ffmpeg \
+    -hide_banner \
+    -stats -v panic \
+    -i "${input}" \
+    -c:v hevc_nvenc \
+    -pix_fmt p010le \
+    -preset slow \
+    -tier high \
+    -rc vbr \
+    -cq 22 \
+    -b:v 0 \
+    -maxrate 50M \
+    -c:a aac \
+    -b:a 320k \
+    -ar 48000 \
+    "${output:=${output_default}}"
+}
+
+# run the h265 function
+h265 "${input}"
+#+end_src
+
 *** Custom containers
 
 You can create a custom directory for your own containers.

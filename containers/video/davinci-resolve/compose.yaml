@@ -1,0 +1,324 @@
+#===============================================================================
+# FILE: compose.yaml
+# Project: Davinci Resolve
+#===============================================================================
+
+#===============================================================================
+# Services Configuration
+#===============================================================================
+
+services:
+  gpu-app:
+    # Build using the local lightweight Dockerfile
+    build:
+      context: .
+      
+      # use networking from the freebsd host
+      network: host
+
+      # HOST_USER set from .env is your user on Freebsd
+      args:
+        - HOST_USER=${HOST_USER}
+
+    # image name
+    image: localhost/davinci-resolve:latest
+
+    # platform linux
+    platform: linux/amd64
+
+    # container name
+    container_name: davinci-resolve
+
+    # HOST_USER set from .env is your user on Freebsd
+    user: "${HOST_USER}"
+
+    # os linux
+    os: linux
+
+    # use networking from the freebsd host
+    network_mode: host
+
+    # stdin and tty
+    stdin_open: true
+    tty: true
+
+    # SIGKILL so the container stops cleaning using: doas podman-compose down
+    stop_signal: SIGKILL
+
+
+#===============================================================================
+# Volume Mounts (Host Bindings & Jail Sockets)
+#===============================================================================
+
+    volumes:
+
+
+      #=========================================================================
+      # Host Library and Nvidia bindings
+      #=========================================================================
+
+      # linuxulator libraries
+      - /compat/linux/usr/lib64:/usr/lib64/nvidia-host:ro
+
+      # nvidia-smi
+      - /compat/linux/usr/bin/nvidia-smi:/usr/local/bin/nvidia-smi:ro
+
+      # dummy-uvm.so
+      - ../../../base-build/dummy-uvm/dummy-uvm.so:/usr/lib64/dummy-uvm.so:ro
+      
+
+      #=========================================================================
+      # Jail Sockets & Runtime Essentials
+      #=========================================================================
+
+      # linuxulator directories
+      - /compat/linux/proc:/proc
+      - /compat/linux/sys:/sys
+      - /compat/linux/dev/fd:/dev/fd
+
+      # tmpfs
+      - rocky-shm:/dev/shm
+
+
+      #=========================================================================
+      # /tmp directory for pulseaudio.socket
+      #=========================================================================
+
+      - /tmp:/tmp:ro
+
+
+      #=========================================================================
+      # XDG_RUNTIME_DIR for wayland socket
+      #=========================================================================
+
+      - ${HOST_XDG_RUNTIME_DIR}:/run/user/${HOST_UID}:ro
+
+
+      #=========================================================================
+      # rocky-writeable-run
+      #=========================================================================
+
+      # xdg runtime dir in the container
+      - rocky-writeable-run:/run/user/${HOST_UID}-writeable:rw
+
+
+      #=========================================================================
+      # AUTOMATED PERSISTENT APPLICATION CONFIG WORKSPACE
+      #=========================================================================
+
+      # config
+      - ./dotfiles/config:/home/${HOST_USER}/.config:rw
+
+      # local
+      - ./dotfiles/local:/home/${HOST_USER}/.local:rw
+
+
+      #=========================================================================
+      # PERSISTENT RESOLVE MEDIA & CONFIG STORAGE
+      #=========================================================================
+
+      # CacheClip
+      - ./storage/CacheClip:/home/${HOST_USER}/CacheClip:rw
+
+      # DaVinci Resolve Media
+      - ./storage/DaVinci Resolve Media:/home/${HOST_USER}/DaVinci Resolve Media:rw
+
+      # BlackmagicDesign
+      - ./storage/BlackmagicDesign:/home/${HOST_USER}/Documents/BlackmagicDesign:rw
+
+      #=========================================================================
+      # App mounts
+      #=========================================================================
+
+      # bin directory mounted from host in .env file
+      - ./${HOST_BIN}:/home/${HOST_USER}/${HOST_BIN}:rw
+
+      # opt directory mounted from host in .env file
+      - ./${HOST_OPT}:/opt:rw
+
+      # mount directory mounted from host in .env file
+      - ${HOST_MOUNT}:${HOST_MOUNT}:rw
+
+
+#===============================================================================
+# Entrypoint & Shell Initialization
+#===============================================================================
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: 
+      - |
+        set -e
+
+        #=======================================================================
+        # create the directory structure 
+        #=======================================================================
+
+        # tmp directory
+        mkdir -p /home/${HOST_USER}/tmp
+
+        # cache directory
+        mkdir -p /home/${HOST_USER}/.cache
+
+        # local share directory
+        mkdir -p /home/${HOST_USER}/.local/share
+
+
+        #=======================================================================
+        # CREATE WRITEABLE RUNTIME ENVIRONMENT (Bypasses read-only host mount)
+        #=======================================================================
+
+        # xdg runtime dir
+        mkdir -p /run/user/${HOST_UID}-writeable
+        chmod 700 /run/user/${HOST_UID}-writeable
+
+
+        #=======================================================================
+        # Symlink the display socket from the read-only path into the writeable one
+        #=======================================================================
+
+        # wayland socket
+        wayland () {
+        if [ -S /run/user/${HOST_UID}/wayland-0 ]; then
+          ln -sf /run/user/${HOST_UID}/wayland-0 /run/user/${HOST_UID}-writeable/wayland-0
+        fi
+        }
+
+
+        # X11 socket
+        x11 () {
+        if [ -S /tmp/.X11-unix/X0 ]; then
+          mkdir -p /home/${HOST_USER}/tmp/.X11-unix
+          ln -sf /tmp/.X11-unix/X0 /home/${HOST_USER}/tmp/.X11-unix/X0
+        fi
+        }
+
+
+        # HOST_XDG_SESSION_TYPE set in .env
+        case "${HOST_XDG_SESSION_TYPE}" in
+            wayland) wayland;;
+            x11) x11;;
+        esac
+
+
+        #=======================================================================
+        # FIXED: Explicitly handle Pulse Audio paths using correct absolute locations
+        #=======================================================================
+
+        if [ -d /run/user/${HOST_UID}/pulse ]; then
+          mkdir -p /run/user/${HOST_UID}-writeable/pulse
+          chmod 700 /run/user/${HOST_UID}-writeable/pulse
+          if [ -S /run/user/${HOST_UID}/pulse/native ]; then
+            ln -sf /run/user/${HOST_UID}/pulse/native /run/user/${HOST_UID}-writeable/pulse/native
+          fi
+        fi
+
+
+        #=======================================================================
+        # FIXED: Explicitly handle D-Bus paths using correct absolute locations
+        #=======================================================================
+
+        if [ -d /run/user/${HOST_UID}/dbus-1 ]; then
+          mkdir -p /run/user/${HOST_UID}-writeable/dbus-1
+          chmod 700 /run/user/${HOST_UID}-writeable/dbus-1
+          if [ -d /run/user/${HOST_UID}/dbus-1/services ]; then
+            ln -sf /run/user/${HOST_UID}/dbus-1/services /run/user/${HOST_UID}-writeable/dbus-1/services
+          fi
+        fi
+
+
+        #=======================================================================
+        # Symlink XDG session handle if present
+        #=======================================================================
+
+        if [ -e /run/user/${HOST_UID}/xdg_session.0 ]; then
+          ln -sf /run/user/${HOST_UID}/xdg_session.0 /run/user/${HOST_UID}-writeable/xdg_session.0
+        fi
+
+
+        #=======================================================================
+        # Fix ownership of Podman-created root configuration space
+        #=======================================================================
+
+        # chown the xdg runtime dir
+        chown -R ${HOST_USER}:${HOST_USER} /run/user/${HOST_UID}-writeable
+        chown -R ${HOST_USER}:${HOST_USER} /home/${HOST_USER}/tmp
+
+        # chmod the tmp directory
+        chmod 755 /home/${HOST_USER}/tmp
+
+        #=======================================================================
+        # Append environment parameters into .bashrc to survive runuser switch
+        #=======================================================================
+
+        {
+          # append the linuxulator libraries to the LD_LIBRARY_PATH 
+          echo 'export LD_LIBRARY_PATH=/usr/lib64:/usr/lib64/nvidia-host'
+
+          # LD_PRELOAD the dummy-uvm.so for the gpu
+          echo 'export LD_PRELOAD=/usr/lib64/dummy-uvm.so'
+          
+          # export the DBUS_SESSION_BUS_ADDRESS
+          echo 'export DBUS_SESSION_BUS_ADDRESS='"${HOST_DBUS_SESSION_BUS_ADDRESS}"''
+
+          # set the TMPDIR to ~/tmp
+          echo 'export TMPDIR=/home/'"${HOST_USER}"'/tmp'
+
+          # export the xdg directories
+          echo 'export XDG_RUNTIME_DIR=/run/user/'"${HOST_UID}"'-writeable'
+          echo 'export XDG_CONFIG_HOME=/home/'"${HOST_USER}"'/.config'
+          echo 'export XDG_CACHE_HOME=/home/'"${HOST_USER}"'/.cache'
+          echo 'export XDG_DATA_HOME=/home/'"${HOST_USER}"'/.local/share'
+
+          # x11
+          echo 'export SDL_VIDEODRIVER=x11'
+          echo 'export QT_QPA_PLATFORM=xcb'
+          echo 'export GDK_BACKEND=x11'
+          echo 'export DISPLAY=:0'
+
+          # nvidia
+          echo 'export __NV_PRIME_RENDER_OFFLOAD=1'
+          echo 'export __GLX_VENDOR_LIBRARY_NAME=nvidia'
+
+          # PulseAudio
+          echo 'export PULSE_SERVER=unix:/tmp/pulseaudio.socket'
+
+        } >> /home/${HOST_USER}/.bashrc
+
+
+        #=======================================================================
+        # Switch from root to our user
+        #=======================================================================
+
+        exec /bin/bash
+
+
+#===============================================================================
+# Named Volumes Definition
+#===============================================================================
+
+volumes:
+
+  #=========================================================================
+  # Shared Memory Volume
+  # Provides 16GB of tmpfs space
+  #=========================================================================
+
+  rocky-shm:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=14g,mode=1777"
+
+
+  #=========================================================================
+  # Writeable Runtime Directory
+  # Isolated tmpfs layer to bypass the read-only FreeBSD host XDG mount
+  #=========================================================================
+
+  rocky-writeable-run:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=16m,mode=0700"

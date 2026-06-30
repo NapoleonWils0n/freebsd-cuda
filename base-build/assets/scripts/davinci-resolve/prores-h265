@@ -1,0 +1,99 @@
+#!/bin/sh
+
+#===============================================================================
+# convert prores video to h265/aac
+#===============================================================================
+
+
+#===============================================================================
+# script usage
+#===============================================================================
+
+usage()
+{
+# if argument passed to function echo it
+[ -z "${1}" ] || echo "! ${1}"
+# display help
+echo "\
+# convert prores video to h265/aac
+
+$(basename "$0") -i input.mov -o output.mp4
+-i infile.mov
+-o outfile.mov :optional agument # if option not provided defaults to input-name.mp4"
+exit 2
+}
+
+
+#===============================================================================
+# error messages
+#===============================================================================
+
+NOTFILE_ERR='not a file'
+INVALID_OPT_ERR='Invalid option:'
+REQ_ARG_ERR='requires an argument'
+WRONG_ARGS_ERR='wrong number of arguments passed to script'
+
+
+#===============================================================================
+# check number of aruments passed to script
+#===============================================================================
+
+[ $# -gt 0 ] || usage "${WRONG_ARGS_ERR}"
+
+
+#===============================================================================
+# getopts check options passed to script
+#===============================================================================
+
+while getopts ':i:o:h' opt
+do
+  case ${opt} in
+     i) input="${OPTARG}"
+	[ -f "${input}" ] || usage "${input} ${NOTFILE_ERR}";;
+     o) output="${OPTARG}";;
+     h) usage;;
+     \?) usage "${INVALID_OPT_ERR} ${OPTARG}" 1>&2;;
+     :) usage "${INVALID_OPT_ERR} ${OPTARG} ${REQ_ARG_ERR}" 1>&2;;
+  esac
+done
+shift $((OPTIND-1))
+
+
+#===============================================================================
+# variables
+#===============================================================================
+
+input_nopath="${input##*/}"
+input_name="${input_nopath%.*}"
+
+# defaults for variables if not defined
+output_default="${input_name}.mp4"
+
+
+#===============================================================================
+# functions
+#===============================================================================
+
+# h265 function
+h265 () {
+    nv-sglrun \
+    ffmpeg \
+    -hide_banner \
+    -stats -v panic \
+    -i "${input}" \
+    -c:v hevc_nvenc \
+    -pix_fmt p010le \
+    -preset slow \
+    -tier high \
+    -rc vbr \
+    -cq 22 \
+    -b:v 0 \
+    -maxrate 50M \
+    -c:a aac \
+    -b:a 320k \
+    -ar 48000 \
+    "${output:=${output_default}}"
+}
+
+# run the h265 function
+h265 "${input}"
