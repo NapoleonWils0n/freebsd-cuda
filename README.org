@@ -1210,10 +1210,10 @@ On Freebsd create a directory for the Davinci Resolve png for the desktop entry.
 mkdir -p ~/.local/share/icons
 #+end_src
 
-Copy the DV_Resolve.png file into the icons directory.
+Copy the DV_Resolve.png file from the squashfs-root into the icons directory.
 
 #+begin_src sh
-cp squashfs-root/graphics/DV_Resolve.png ~/.local/share/icons
+cp ~/video/resolve/squashfs-root/graphics/DV_Resolve.png ~/.local/share/icons
 #+end_src
 
 ***** ffmpeg script to convert prores to h265
