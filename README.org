@@ -23,23 +23,31 @@ GUI Applications launched with desktop entries on Freebsd.
 
 *** Pre-configured Applications
 
-Firefox with hardware accelerated video and Widevine DRM support.
+1) Davinci Resolve with Cuda
 
-ffmpeg with hardware-accelerated nvenc encoding.
+[[https://www.blackmagicdesign.com/uk/products/davinciresolve]]
 
-WhisperX audio transcription with Cuda acceleration.
+2) Firefox with hardware accelerated video and Widevine DRM support.
+
+[[https://www.firefox.com/en-GB/]]
+
+3) ffmpeg with hardware-accelerated nvenc encoding.
+
+[[https://www.ffmpeg.org/]]
+
+4) WhisperX audio transcription with Cuda acceleration.
 
 [[https://github.com/m-bain/whisperX]]
 
-Ollama using Cuda.
+5) Ollama using Cuda.
 
 [[https://github.com/ollama/ollama]]
 
-kokoro-onnx using Cuda.
+6) kokoro-onnx using Cuda.
 
 [[https://github.com/thewh1teagle/kokoro-onnx]]
 
-ComfYU
+7) ComfYU
 
 [[https://github.com/comfy-org/comfyui]]
 
