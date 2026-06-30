@@ -1135,6 +1135,8 @@ Download the latest version of Davinci Resolve.
 
 [[https://www.blackmagicdesign.com/uk/products/davinciresolve]]
 
+***** Unzip the Davinci Resolve zip file
+
 Create a resolve directory in the your video directory.
 
 #+begin_src sh
@@ -1156,13 +1158,13 @@ Change into the resolve directory.
 cd ~/video/resolve
 #+end_src
 
-Install zip on Freebsd
+Install zip on Freebsd.
 
 #+begin_src sh
 doas pkg install zip
 #+end_src
 
-Unzip the file
+Unzip the file.
 
 #+begin_src sh
 unzip DaVinci_Resolve_21.0.1_Linux.zip
@@ -1198,6 +1200,20 @@ Copy the directories from the squashfs-root directory into /opt/resolve/
 
 #+begin_src sh
 cp -a bin libs share plugins LUT Fusion Developer graphics docs scripts UI_Resource Onboarding Certificates Control CentOSUpdate BlackmagicRAWPlayer BlackmagicRAWSpeedTest "DaVinci Control Panels Setup" "Fairlight Studio Utility" "Technical Documentation" /opt/resolve/
+#+end_src
+
+***** Desktop entry
+
+On Freebsd create a directory for the Davinci Resolve png for the desktop entry.
+
+#+begin_src sh
+mkdir -p ~/.local/share/icons
+#+end_src
+
+Copy the DV_Resolve.png file into the icons directory.
+
+#+begin_src sh
+cp squashfs-root/graphics/DV_Resolve.png ~/.local/share/icons
 #+end_src
 
 ***** ffmpeg script to convert prores to h265
