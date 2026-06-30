@@ -1,0 +1,95 @@
+#!/bin/sh
+
+#===============================================================================
+# convert h264 video to prores pcm
+#===============================================================================
+
+
+#===============================================================================
+# script usage
+#===============================================================================
+
+usage()
+{
+# if argument passed to function echo it
+[ -z "${1}" ] || echo "! ${1}"
+# display help
+echo "\
+# convert h264 video to prores pcm
+
+$(basename "$0") -i input.mov -o output.mp4
+-i infile.mov
+-o outfile.mov :optional agument # if option not provided defaults to input-name.mov"
+exit 2
+}
+
+
+#===============================================================================
+# error messages
+#===============================================================================
+
+NOTFILE_ERR='not a file'
+INVALID_OPT_ERR='Invalid option:'
+REQ_ARG_ERR='requires an argument'
+WRONG_ARGS_ERR='wrong number of arguments passed to script'
+
+
+#===============================================================================
+# check number of aruments passed to script
+#===============================================================================
+
+[ $# -gt 0 ] || usage "${WRONG_ARGS_ERR}"
+
+
+#===============================================================================
+# getopts check options passed to script
+#===============================================================================
+
+while getopts ':i:o:h' opt
+do
+  case ${opt} in
+     i) input="${OPTARG}"
+	[ -f "${input}" ] || usage "${input} ${NOTFILE_ERR}";;
+     o) output="${OPTARG}";;
+     h) usage;;
+     \?) usage "${INVALID_OPT_ERR} ${OPTARG}" 1>&2;;
+     :) usage "${INVALID_OPT_ERR} ${OPTARG} ${REQ_ARG_ERR}" 1>&2;;
+  esac
+done
+shift $((OPTIND-1))
+
+
+#===============================================================================
+# variables
+#===============================================================================
+
+input_nopath="${input##*/}"
+input_name="${input_nopath%.*}"
+
+# defaults for variables if not defined
+output_default="${input_name}.mov"
+
+
+#===============================================================================
+# functions
+#===============================================================================
+
+# prores function
+prores () {
+    ffmpeg \
+    -hide_banner \
+    -stats -v panic \
+    -i "${input}" \
+    -c:v prores_ks \
+    -profile:v 2 \
+    -vendor apl0 \
+    -g 1 \
+    -pix_fmt yuv422p10le \
+    -c:a pcm_s16le \
+    -ar 48000 \
+    -f mov \
+    "${output:=${output_default}}"
+}
+
+# run the prores function
+prores "${input}"
