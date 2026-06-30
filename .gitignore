@@ -8,3 +8,6 @@ containers/python/comfyui/dotfiles
 containers/python/comfyui/ComfyUI
 containers/scripts/ffmpeg/bin
 containers/scripts/ffmpeg/dotfiles
+containers/video/davinci-resolve/dotfiles
+containers/video/davinci-resolve/opt
+containers/video/davinci-resolve/storage
