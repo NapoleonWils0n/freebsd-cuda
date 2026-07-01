@@ -1145,8 +1145,6 @@ Make sure to review the .env file to make sure everything is correct.
 make
 #+end_src
 
-Note: You may need to change medvram to either lowvram or highvram depending on your set up.
-
 ***** build
 
 #+begin_src sh
