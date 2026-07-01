@@ -30,6 +30,7 @@ OPT_DIR		:= opt/resolve
 STORAGE_DIR	:= storage
 CACHECLIP_DIR	:= $(STORAGE_DIR)/CacheClip
 MEDIA_DIR	:= $(STORAGE_DIR)/'DaVinci Resolve Media'
+BACKUPS_DIR	:= $(STORAGE_DIR)/'Resolve Project Backups'
 BLACKMAGIC_DIR	:= $(STORAGE_DIR)/BlackmagicDesign
 
 #===============================================================================
@@ -103,6 +104,7 @@ storage: opt
 	mkdir -p $(CACHECLIP_DIR)
 	mkdir -p $(MEDIA_DIR)
 	mkdir -p $(BLACKMAGIC_DIR)
+	mkdir -p $(BACKUPS_DIR)
 
 
 #===============================================================================

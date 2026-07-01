@@ -1205,6 +1205,14 @@ unzip DaVinci_Resolve_21.0.1_Linux.zip
 
 ***** Enter the container
 
+Change directory into the davinci-resolve directory.
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/video/davinci-resolve
+#+end_src
+
+Enter the podman container.
+
 #+begin_src sh
 doas podman exec -it -u ${USER} davinci-resolve /bin/bash
 #+end_src
