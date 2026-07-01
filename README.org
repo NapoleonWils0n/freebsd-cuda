@@ -1145,6 +1145,17 @@ Make sure to review the .env file to make sure everything is correct.
 make
 #+end_src
 
+Note: The Makefile will create the following empty directories in your video directory.
+
+These are just empty mount points that are required by Davinci Resolve.
+
+#+begin_example
+CacheClip
+Resolve Project Backups
+#+end_example
+
+All the Davinci Resolve are files kept in the storage directory.
+
 ***** build
 
 #+begin_src sh
