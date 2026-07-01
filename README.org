@@ -1233,7 +1233,7 @@ doas podman exec -it -u ${USER} davinci-resolve /bin/bash
 Inside the Podman container change into the resolve directory you created.
 
 #+begin_src sh
-cd video/resolve-zip
+cd Videos/resolve-zip
 #+end_src
 
 Extract the DaVinci_Resolve_21.0.1_Linux.run file with --appimage-extract.
@@ -1271,6 +1271,8 @@ rm -rf squashfs-root
 But keep the DaVinci_Resolve_21.0.1_Linux.zip
 
 ***** Desktop entry
+
+On the Freebsd host.
 
 Copy the DV_Resolve.png from the squashfs-root directory to the default icons directory for the desktop entry.
 
