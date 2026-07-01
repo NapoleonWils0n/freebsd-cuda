@@ -1254,22 +1254,6 @@ Copy the directories from the squashfs-root directory into /opt/resolve/
 cp -a bin libs share plugins LUT Fusion Developer graphics docs scripts UI_Resource Onboarding Certificates Control CentOSUpdate BlackmagicRAWPlayer BlackmagicRAWSpeedTest "DaVinci Control Panels Setup" "Fairlight Studio Utility" "Technical Documentation" /opt/resolve/
 #+end_src
 
-After you have copied directories in the step above you can delete the following files and directories.
-
-#+begin_src sh
-rm DaVinci_Resolve_21.0.1_Linux.run
-#+end_src
-
-#+begin_src sh
-rm Linux_Installation_Instructions.html
-#+end_src
-
-#+begin_src sh
-rm -rf squashfs-root
-#+end_src
-
-But keep the DaVinci_Resolve_21.0.1_Linux.zip
-
 ***** Desktop entry
 
 On the Freebsd host.
@@ -1285,6 +1269,22 @@ Copy the DaVinciResolve.desktop to the applications directory.
 #+begin_src sh
 cp ~/podman/freebsd-cuda/base-build/assets/applications/davinci-resolve/DaVinciResolve.desktop ~/.local/share/applications
 #+end_src
+
+After you have copied directories in the step above you can delete the following files and directories.
+
+#+begin_src sh
+rm DaVinci_Resolve_21.0.1_Linux.run
+#+end_src
+
+#+begin_src sh
+rm Linux_Installation_Instructions.html
+#+end_src
+
+#+begin_src sh
+rm -rf squashfs-root
+#+end_src
+
+But keep the DaVinci_Resolve_21.0.1_Linux.zip
 
 ***** Stop the container
 
