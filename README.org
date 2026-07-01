@@ -22,32 +22,31 @@ Directory mounted from Freebsd into the Podman container for file access.
 GUI Applications launched with desktop entries on Freebsd.
 
 *** Pre-configured Applications
-
-1) Davinci Resolve with Cuda
+**** Davinci Resolve with Cuda
 
 [[https://www.blackmagicdesign.com/uk/products/davinciresolve]]
 
-2) Firefox with hardware accelerated video and Widevine DRM support.
+**** Firefox with hardware accelerated video and Widevine DRM support.
 
 [[https://www.firefox.com/en-GB/]]
 
-3) ffmpeg with hardware-accelerated nvenc encoding.
+**** ffmpeg with hardware-accelerated nvenc encoding.
 
 [[https://www.ffmpeg.org/]]
 
-4) WhisperX audio transcription with Cuda acceleration.
+**** WhisperX audio transcription with Cuda acceleration.
 
 [[https://github.com/m-bain/whisperX]]
 
-5) Ollama using Cuda.
+**** Ollama using Cuda.
 
 [[https://github.com/ollama/ollama]]
 
-6) kokoro-onnx using Cuda.
+**** kokoro-onnx using Cuda.
 
 [[https://github.com/thewh1teagle/kokoro-onnx]]
 
-7) ComfYU
+**** ComfYU
 
 [[https://github.com/comfy-org/comfyui]]
 
