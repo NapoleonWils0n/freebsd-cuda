@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #===============================================================================
-# convert prores video to h265/aac
+# convert video to prores pcm
 #===============================================================================
 
 
@@ -15,11 +15,11 @@ usage()
 [ -z "${1}" ] || echo "! ${1}"
 # display help
 echo "\
-# convert prores video to h265/aac
+# convert video to prores pcm
 
 $(basename "$0") -i input.mov -o output.mp4
 -i infile.mov
--o outfile.mov :optional agument # if option not provided defaults to input-name.mp4"
+-o outfile.mov :optional agument # if option not provided defaults to input-name.mov"
 exit 2
 }
 
@@ -67,33 +67,29 @@ input_nopath="${input##*/}"
 input_name="${input_nopath%.*}"
 
 # defaults for variables if not defined
-output_default="${input_name}.mp4"
+output_default="${input_name}.mov"
 
 
 #===============================================================================
 # functions
 #===============================================================================
 
-# h265 function
-h265 () {
-    nv-sglrun \
+# prores function
+prores () {
     ffmpeg \
     -hide_banner \
     -stats -v panic \
     -i "${input}" \
-    -c:v hevc_nvenc \
-    -pix_fmt p010le \
-    -preset slow \
-    -tier high \
-    -rc vbr \
-    -cq 22 \
-    -b:v 0 \
-    -maxrate 50M \
-    -c:a aac \
-    -b:a 320k \
+    -c:v prores_ks \
+    -profile:v 2 \
+    -vendor apl0 \
+    -g 1 \
+    -pix_fmt yuv422p10le \
+    -c:a pcm_s16le \
     -ar 48000 \
+    -f mov \
     "${output:=${output_default}}"
 }
 
-# run the h265 function
-h265 "${input}"
+# run the prores function
+prores "${input}"

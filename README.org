@@ -1267,23 +1267,23 @@ doas podman-compose down
 #+end_src
 
 ***** ffmpeg scripts
-****** ffmpeg script to convert h264 to prores
+****** ffmpeg script to convert video to prores
 
-Freebsd ffmpeg script to convert h264 video to prores video pcm audio.
+Freebsd ffmpeg script to convert video to prores video pcm audio.
 
-Copy the h264-prores script to your bin directory.
+Copy the prores-video script to your bin directory.
 
 #+begin_src sh
-cp ~/podman/freebsd-cuda/base-build/assets/scripts/davinci-resolve/h264-prores ~/bin
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/davinci-resolve/prores-video ~/bin
 #+end_src
 
-h264-prores
+prores-video
 
 #+begin_src sh
 #!/bin/sh
 
 #===============================================================================
-# convert h264 video to prores pcm
+# convert video to prores pcm
 #===============================================================================
 
 
@@ -1297,7 +1297,7 @@ usage()
 [ -z "${1}" ] || echo "! ${1}"
 # display help
 echo "\
-# convert h264 video to prores pcm
+# convert video to prores pcm
 
 $(basename "$0") -i input.mov -o output.mp4
 -i infile.mov
@@ -1381,19 +1381,19 @@ prores "${input}"
 
 Freebsd ffmpeg script to convert Prores video to h265.
 
-Copy the prores-h265 script to your bin directory.
+Copy the h265-nvenc script to your bin directory.
 
 #+begin_src sh
-cp ~/podman/freebsd-cuda/base-build/assets/scripts/davinci-resolve/prores-h265 ~/bin
+cp ~/podman/freebsd-cuda/base-build/assets/scripts/davinci-resolve/h265-nvenc ~/bin
 #+end_src
 
-prores-h265 
+h265-nvenc
 
 #+begin_src sh
 #!/bin/sh
 
 #===============================================================================
-# convert prores video to h265/aac
+# convert video to h265/aac
 #===============================================================================
 
 
@@ -1407,7 +1407,7 @@ usage()
 [ -z "${1}" ] || echo "! ${1}"
 # display help
 echo "\
-# convert prores video to h265/aac
+# convert video to h265/aac
 
 $(basename "$0") -i input.mov -o output.mp4
 -i infile.mov
