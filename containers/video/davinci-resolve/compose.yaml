@@ -137,7 +137,7 @@ services:
       - ./${HOST_OPT}:/opt:rw
 
       # mount directory mounted from host in .env file
-      - ${HOST_MOUNT}:${HOST_MOUNT}:rw
+      - ${HOST_MOUNT}:/home/${HOST_USER}/Videos:rw
 
 
 #===============================================================================
