@@ -1170,10 +1170,10 @@ Download the latest version of Davinci Resolve.
 
 ***** Unzip the Davinci Resolve zip file
 
-Create a resolve directory in the your video directory.
+Create a resolve-zip directory in the your video directory.
 
 #+begin_src sh
-mkdir -p ~/video/resolve
+mkdir -p ~/video/resolve-zip
 #+end_src
 
 Note if you are using a newer version of Davinci Resolve,
@@ -1182,13 +1182,13 @@ change the version number in the commands listed below.
 Move the zip file into the resolve directory.
 
 #+begin_src sh
-mv DaVinci_Resolve_21.0.1_Linux.zip ~/video/resolve
+mv DaVinci_Resolve_21.0.1_Linux.zip ~/video/resolve-zip
 #+end_src
 
 Change into the resolve directory.
 
 #+begin_src sh
-cd ~/video/resolve
+cd ~/video/resolve-zip
 #+end_src
 
 Install zip on Freebsd.
@@ -1222,7 +1222,7 @@ doas podman exec -it -u ${USER} davinci-resolve /bin/bash
 Inside the Podman container change into the resolve directory you created.
 
 #+begin_src sh
-cd video/resolve
+cd video/resolve-zip
 #+end_src
 
 Extract the DaVinci_Resolve_21.0.1_Linux.run file with --appimage-extract.
@@ -1242,6 +1242,22 @@ Copy the directories from the squashfs-root directory into /opt/resolve/
 #+begin_src sh
 cp -a bin libs share plugins LUT Fusion Developer graphics docs scripts UI_Resource Onboarding Certificates Control CentOSUpdate BlackmagicRAWPlayer BlackmagicRAWSpeedTest "DaVinci Control Panels Setup" "Fairlight Studio Utility" "Technical Documentation" /opt/resolve/
 #+end_src
+
+After you have copied directories in the step above you can delete the following files and directories.
+
+#+begin_src sh
+rm DaVinci_Resolve_21.0.1_Linux.run
+#+end_src
+
+#+begin_src sh
+rm Linux_Installation_Instructions.html
+#+end_src
+
+#+begin_src sh
+rm -rf squashfs-root
+#+end_src
+
+But keep the DaVinci_Resolve_21.0.1_Linux.zip
 
 ***** Desktop entry
 

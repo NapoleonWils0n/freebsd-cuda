@@ -126,6 +126,7 @@ services:
       # mount directory mounted from host in .env file
       - ${HOST_MOUNT}:/home/${HOST_USER}/Videos:rw
 
+
       #=========================================================================
       # PERSISTENT RESOLVE MEDIA & CONFIG STORAGE
       #=========================================================================
@@ -133,11 +134,11 @@ services:
       # CacheClip
       - ./storage/CacheClip:/home/${HOST_USER}/Videos/CacheClip:rw
 
-      # DaVinci Resolve Media
-      - ./storage/DaVinci Resolve Media:/home/${HOST_USER}/DaVinci Resolve Media:rw
-
       # Resolve Project Backups
       - ./storage/Resolve Project Backups:/home/${HOST_USER}/Videos/Resolve Project Backups:rw
+
+      # DaVinci Resolve Media
+      - ./storage/DaVinci Resolve Media:/home/${HOST_USER}/DaVinci Resolve Media:rw
 
       # BlackmagicDesign
       - ./storage/BlackmagicDesign:/home/${HOST_USER}/Documents/BlackmagicDesign:rw

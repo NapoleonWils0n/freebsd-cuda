@@ -125,6 +125,7 @@ env: storage
 	if [ -z "$$_MNT" ]; then \
 		_MNT="/home/$$_USER/video"; \
 	fi; \
+	mkdir -p "$$_MNT/CacheClip" "$$_MNT/Resolve Project Backups"; \
 	printf "%s\n" \
 	"#===============================================================================" \
 	"# FILE: .env" \
