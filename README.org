@@ -365,6 +365,9 @@ make clean
    
 *** Scripts
 **** ffmpeg scripts
+
+🎥 [[https://www.youtube.com/watch?v=yDMtzK4ZkkQ][ffmpeg nvenc encoding working in a Linux Podman container on Freebsd]]
+
 ***** Change directory into the ffmpeg directory
 
 #+begin_src sh
@@ -462,6 +465,9 @@ doas podman-compose down
 
 *** Browsers
 **** Firefox
+
+🎥 [[https://www.youtube.com/watch?v=EG3s5vKM3fs][Freebsd Firefox Widevine for DRM playback in Rocky Linux Podman container]]
+
 ***** Change directory into the firefox directory
 
 #+begin_src sh
@@ -579,6 +585,9 @@ doas podman-compose down
 
 *** Python
 **** comfyui
+
+🎥 [[https://www.youtube.com/watch?v=DfG4pOf0EiQ][ComfyUI with Cuda on Freebsd]]
+
 ***** Change directory into the comfyui directory
 
 #+begin_src sh
@@ -715,6 +724,9 @@ doas podman-compose down
 #+end_src
 
 **** kokoro
+
+🎥 [[https://www.youtube.com/watch?v=iUrTC4PrBpM][Kokoro-onnx with Cuda for text to speech with Emacs]]
+
 ***** resources
 
 kokoro-onnx tts with Cuda support.
@@ -1127,6 +1139,9 @@ doas podman-compose down
 
 *** Video
 **** Davinci Resolve
+
+🎥 [[https://youtu.be/kXFYmkQo5Dk][Davinci Resolve 21 install on Freebsd with Cuda]]
+
 ***** Change directory into the davinci-resolve directory
 
 #+begin_src sh
