@@ -1629,6 +1629,14 @@ Copy the blender.desktop to the applications directory.
 cp ~/podman/freebsd-cuda/base-build/assets/applications/blender/blender.desktop ~/.local/share/applications
 #+end_src
 
+***** Videos directory mounted from Freebsd into the Blender container.
+
+The Makefile will automatically detect the name of your videos directory on Freebsd.
+
+Your videos directory on Freebsd is mounted into the Blender container for file access.
+
+So you store you Blender files on Freebsd in the Videos directory.
+
 ***** Stop the container
 
 Change into the container directory.
