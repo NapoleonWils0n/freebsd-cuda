@@ -11,3 +11,5 @@ containers/scripts/ffmpeg/dotfiles
 containers/video/davinci-resolve/dotfiles
 containers/video/davinci-resolve/opt
 containers/video/davinci-resolve/storage
+containers/graphics/blender/blender
+containers/graphics/blender/dotfiles
