@@ -50,6 +50,10 @@ GUI Applications launched with desktop entries on Freebsd.
 
 [[https://github.com/comfy-org/comfyui]]
 
+**** Blender
+
+[[https://www.blender.org/]]
+
 ** Inital set up
 *** Follow the podman install instructions
 
@@ -1540,6 +1544,105 @@ h265 () {
 h265 "${input}"
 #+end_src
 
+*** Graphics
+**** Blender
+***** Change directory into the blender directory
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/graphics/blender
+#+end_src
+
+***** Run the Makefile
+
+Run make Makefile which will create the persistent storage directories.
+
+And the .env file which will set your username, id and set the mounted Videos directory.
+
+Make sure to review the .env file to make sure everything is correct.
+
+#+begin_src sh
+make
+#+end_src
+
+***** build
+
+#+begin_src sh
+doas podman build \
+--network=host \
+--os linux \
+--arch amd64 \
+--build-arg HOST_USER="${USER}" \
+-t localhost/blender .
+#+end_src
+
+***** Blender download and install
+
+[[https://www.blender.org/download/]]
+
+Move the blender-5.1.2-linux-x64.tar.xz into the podman blender directory
+
+#+begin_src sh
+mv blender-*-linux-x64.tar.xz ~/podman/freebsd-cuda/containers/graphics/blender
+#+end_src
+
+Extract the tar file into the blender directory.
+
+#+begin_src sh
+tar -xvpf blender-*-linux-x64.tar.xz -C blender --strip-components=1
+#+end_src
+
+Remove the blender tar file.
+
+#+begin_src sh
+rm blender-*-linux-x64.tar.xz
+#+end_src
+
+***** Start the container
+
+#+begin_src sh
+doas podman-compose up -d
+#+end_src
+
+***** Enter the container
+
+If you need to enter the podman container.
+
+#+begin_src sh
+doas podman exec -it -u ${USER} blender /bin/bash
+#+end_src
+
+Note its not required to enter the container to get blender working.
+
+***** Desktop entry
+
+On the Freebsd host.
+
+Copy the blender.svg from the blender directory to the default icons directory for the desktop entry.
+
+#+begin_src sh
+doas cp ~/podman/freebsd-cuda/containers/graphics/blender/blender/blender.svg /usr/local/share/icons/hicolor/scalable/apps
+#+end_src
+
+Copy the blender.desktop to the applications directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/applications/blender/blender.desktop ~/.local/share/applications
+#+end_src
+
+***** Stop the container
+
+Change into the container directory.
+
+#+begin_src sh
+cd ~/podman/freebsd-cuda/containers/graphics/blender
+#+end_src
+
+And stop the container.
+
+#+begin_src sh
+doas podman-compose down
+#+end_src
+
 *** Custom containers
 
 You can create a custom directory for your own containers.
@@ -1609,6 +1712,12 @@ doas podman rmi localhost/kokoro-onnx:latest
 
 #+begin_src sh
 doas podman rmi localhost/comfyui:latest
+#+end_src
+
+**** Delete the blender container
+
+#+begin_src sh
+doas podman rmi localhost/blender:latest
 #+end_src
 
 **** Delete the base-image container
