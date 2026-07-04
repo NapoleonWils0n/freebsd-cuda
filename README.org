@@ -467,6 +467,50 @@ And then stop the container.
 doas podman-compose down
 #+end_src
 
+***** Makefile
+
+To make starting easier i created a Makefile you can use to start and stop ffmpeg
+
+1) Create a directory for the Makefile
+
+#+begin_src sh
+mkdir -p ~/make/ffmpeg
+#+end_src
+
+2) Copy the Makefile into the directory.
+
+#+begin_src sh
+cp ~/podman/freebsd-cuda/base-build/assets/makefiles/ffmpeg/Makefile ~/make/ffmpeg
+#+end_src
+
+3) Using the Makefile
+
+Change into the directory with the Ollama Makefile.
+
+#+begin_src sh
+cd ~/make/ffmpeg
+#+end_src
+
+4) Start the ffmpeg container
+
+This will start and enter the container
+
+#+begin_src sh
+make
+#+end_src
+
+5) exit the container when you finished
+
+#+begin_src exit
+exit
+#+end_src
+
+6) Stop the ffmpeg
+
+#+begin_src sh
+make clean
+#+end_src
+   
 *** Browsers
 **** Firefox
 
