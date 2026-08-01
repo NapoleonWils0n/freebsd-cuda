@@ -1,0 +1,44 @@
+services:
+  llama-swap:
+    build:
+      context: .
+    image: localhost/llama-swap:latest
+    network_mode: host
+    platform: linux/amd64
+    container_name: llama-swap
+    os: linux
+    network_mode: host
+    stdin_open: true
+    tty: true
+    stop_signal: SIGKILL
+    environment:
+      - LLAMA_SWAP_PORT=${LLAMA_SWAP_PORT:-8080}
+    volumes:
+      - ./config:/config:ro
+      - ./models:/models:ro
+      # linuxulator libraries
+      - /compat/linux/usr/lib64:/usr/lib64/nvidia-host:ro
+      # nvidia-smi
+      - /compat/linux/usr/bin/nvidia-smi:/usr/local/bin/nvidia-smi:ro
+      # dummy-uvm.so
+      - ../../../base-build/dummy-uvm/dummy-uvm.so:/usr/lib64/dummy-uvm.so:ro
+      # linuxulator directories
+      - /compat/linux/proc:/proc
+      - /compat/linux/sys:/sys
+      - /compat/linux/dev/fd:/dev/fd
+      # tmpfs
+      - rocky-shm:/dev/shm
+      - /tmp:/tmp:ro
+volumes:
+  rocky-shm:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=4g,mode=1777"
+  rocky-writeable-run:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=16m,mode=0700"
