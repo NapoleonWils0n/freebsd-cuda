@@ -98,4 +98,4 @@ while [ -z "${jail_id}" ]; do
 done
 
 # Use jexec to run the wrapper-podman script in the podman container
-doas jexec -u "${USER}" "${jail_id}" /bin/bash -ilc "${HOME}/bin/wrapper-podman -a ${app}" -- "${@}"
+doas jexec -u "${USER}" "${jail_id}" /bin/bash -ic "${HOME}/bin/wrapper-podman -a ${app}" -- "${@}"
