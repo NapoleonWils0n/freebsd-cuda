@@ -2,6 +2,9 @@
 containers/custom
 containers/browsers/firefox/bin
 containers/browsers/firefox/dotfiles
+containers/graphics/blender/blender
+containers/graphics/blender/dotfiles
+containers/python/demucs/dotfiles
 containers/python/whisperx/dotfiles
 containers/python/kokoro-onnx/dotfiles
 containers/python/comfyui/dotfiles
@@ -11,5 +14,3 @@ containers/scripts/ffmpeg/dotfiles
 containers/video/davinci-resolve/dotfiles
 containers/video/davinci-resolve/opt
 containers/video/davinci-resolve/storage
-containers/graphics/blender/blender
-containers/graphics/blender/dotfiles
