@@ -34,6 +34,10 @@ GUI Applications launched with desktop entries on Freebsd.
 
 [[https://www.ffmpeg.org/]]
 
+**** demucs audio separation with cuda support
+
+[[https://github.com/adefossez/demucs]]
+
 **** WhisperX audio transcription with Cuda acceleration.
 
 [[https://github.com/m-bain/whisperX]]
