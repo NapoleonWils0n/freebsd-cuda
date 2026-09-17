@@ -27,7 +27,7 @@ RUN dnf install -y cmake clang git cuda --setopt="install_weak_deps=False" --exc
 #
 
 RUN cd /tmp && git clone https://github.com/ggml-org/llama.cpp.git
-RUN cd /tmp/llama.cpp && git checkout ${LLAMACPP_REFSPEC} && env CUDACXX=/usr/local/cuda-13.3/bin/nvcc cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DGGML_CUDA=ON -DGGML_CUDA_USE_FLASH_ATTENTION=ON -DGGML_CUDA_FA_ALL_QUANTS=ON && cmake --build build --config Release -j
+RUN cd /tmp/llama.cpp && git checkout ${LLAMACPP_REFSPEC} && env CUDACXX=`ls /usr/local/cuda-*/bin/nvcc | head -n 1` cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DGGML_CUDA=ON -DGGML_CUDA_USE_FLASH_ATTENTION=ON -DGGML_CUDA_FA_ALL_QUANTS=ON && cmake --build build --config Release -j
 RUN cd /tmp/llama.cpp/build && cmake --install .
 
 # Pull llama-swap FreeBSD binary from github releases.
