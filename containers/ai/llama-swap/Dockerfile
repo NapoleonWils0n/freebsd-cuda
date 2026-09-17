@@ -11,7 +11,7 @@ FROM localhost/base-image:latest
 ARG LLAMACPP_REFSPEC=master
 
 # Set to a llama-swap release number
-ARG LLAMA_SWAP_VERSION=244
+ARG LLAMA_SWAP_VERSION=256
 
 # Library path
 #
