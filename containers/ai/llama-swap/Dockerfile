@@ -42,7 +42,7 @@ RUN cd /tmp && tar zxvf llama-swap.tar.gz && mv llama-swap /usr/bin
 
 # Copy some nvidia libs that aren't in the FreeBSD pkg.
 #
-RUN cp /usr/local/cuda-13.3/targets/x86_64-linux/lib/lib{cublas,cudart}* /usr/lib64
+RUN cp /usr/local/cuda-*/targets/x86_64-linux/lib/lib{cublas,cudart}* /usr/lib64
 RUN chmod a+rx /usr/lib64/lib*.so* && chmod a+r /usr/lib64/lib*.a
 
 RUN dnf remove -y cmake clang git cuda
