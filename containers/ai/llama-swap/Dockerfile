@@ -35,7 +35,7 @@ RUN cd /tmp/llama.cpp/build && cmake --install .
 #
 
 RUN curl -L -o /tmp/llama-swap.tar.gz https://github.com/mostlygeek/llama-swap/releases/download/v${LLAMA_SWAP_VERSION}/llama-swap_${LLAMA_SWAP_VERSION}_freebsd_amd64.tar.gz
-RUN cd /tmp && file llama-swap.tar.gz && tar zxvf llama-swap.tar.gz && mv llama-swap /usr/bin
+RUN cd /tmp && tar zxvf llama-swap.tar.gz && mv llama-swap /usr/bin
 
 # Remove build dependencies
 #
